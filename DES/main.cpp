@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			return libcrypto::des::EncryptFile(opts.Input, opts.Output, opts.Key, opts.Mode);
+			return libcrypto::des::EncryptFile(opts.Input, opts.Output, opts.Key);
 		}
 	}
 	else if(opts.Action == libcrypto::Action::DECRYPT)
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			return libcrypto::des::DecryptFile(opts.Input, opts.Output, opts.Key, opts.Mode);
+			return libcrypto::des::DecryptFile(opts.Input, opts.Output, opts.Key);
 		}
 	}
 	else

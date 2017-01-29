@@ -124,7 +124,7 @@ namespace libcrypto
 				return POSSIBLY_WEAK;
 			}
 
-			return OK;
+			return NOT_WEAK;
 		}
 	}
 }

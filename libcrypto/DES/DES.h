@@ -50,7 +50,7 @@ namespace libcrypto
 	namespace des
 	{
 		/** The Strength of a DES key */
-		enum KeyStrength { WEAK, SEMI_WEAK, POSSIBLY_WEAK, OK };
+		enum KeyStrength { WEAK, SEMI_WEAK, POSSIBLY_WEAK, NOT_WEAK };
 
 		/**
 		 * Check the strength of the provided key

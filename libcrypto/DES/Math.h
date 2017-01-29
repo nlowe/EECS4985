@@ -65,7 +65,7 @@ inline void split56(uint64_t in, uint64_t& left, uint64_t& right)
 /**
 * Joins the two 28-bit halves into a 56-bit output
 */
-inline uint64_t join56(uint64_t left, uint64_t right)
+constexpr uint64_t join56(uint64_t left, uint64_t right)
 {
 	return (left & MASK28) << 28 | (right & MASK28);
 }
@@ -82,7 +82,7 @@ inline void split64(uint64_t in, uint64_t& left, uint64_t& right)
 /**
 * Joins the two 32-bit halves into a 64-bit output
 */
-inline uint64_t join64(uint64_t left, uint64_t right)
+constexpr uint64_t join64(uint64_t left, uint64_t right)
 {
 	return left << 32 | right;
 }
@@ -106,7 +106,7 @@ inline void rotR28(uint64_t& in, uint64_t places)
 /**
 * Extracts the 6-bit group for the specified s-box (1-8)
 */
-inline uint8_t extract6(uint64_t bits, uint8_t group)
+constexpr uint8_t extract6(uint64_t bits, uint8_t group)
 {
 	return (bits >> (6 * (8 - group))) & MASK6;
 }
@@ -114,7 +114,7 @@ inline uint8_t extract6(uint64_t bits, uint8_t group)
 /**
 * Calculates the row of the SBox for the specified input
 */
-inline uint8_t srow(uint8_t bits)
+constexpr uint8_t srow(uint8_t bits)
 {
 	return (bits & MASK6_MSB) >> 4 | (bits & MASK_LSB);
 }
@@ -122,7 +122,7 @@ inline uint8_t srow(uint8_t bits)
 /**
 * Calculates the column of the SBox for the specified input
 */
-inline uint8_t scol(uint8_t bits)
+constexpr uint8_t scol(uint8_t bits)
 {
 	return (bits & MASK6_MIDDLE4) >> 1;
 }

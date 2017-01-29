@@ -57,7 +57,7 @@ namespace libcrypto
 
 			for(size_t i = 0; i < outputSize; i++)
 			{
-				out |= ((in >> (inputSize - table[outputSize - 1 - i])) & 1) << i;
+				out |= ((in >> inputSize - table[outputSize - 1 - i]) & 1) << i;
 			}
 
 			return out;
@@ -77,14 +77,14 @@ namespace libcrypto
 			auto b7 = extract6(in, 7);
 			auto b8 = extract6(in, 8);
 
-			return S[0][srow(b1)][scol(b1)] << 28 |
-				S[1][srow(b2)][scol(b2)] << 24 |
-				S[2][srow(b3)][scol(b3)] << 20 |
-				S[3][srow(b4)][scol(b4)] << 16 |
-				S[4][srow(b5)][scol(b5)] << 12 |
-				S[5][srow(b6)][scol(b6)] << 8  |
-				S[6][srow(b7)][scol(b7)] << 4  |
-				S[7][srow(b8)][scol(b8)];
+			return S0[(srow(b1) << 4) + scol(b1)] << 28 |
+				S1[(srow(b2) << 4) + scol(b2)] << 24 |
+				S2[(srow(b3) << 4) + scol(b3)] << 20 |
+				S3[(srow(b4) << 4) + scol(b4)] << 16 |
+				S4[(srow(b5) << 4) + scol(b5)] << 12 |
+				S5[(srow(b6) << 4) + scol(b6)] << 8  |
+				S6[(srow(b7) << 4) + scol(b7)] << 4  |
+				S7[(srow(b8) << 4) + scol(b8)];
 		}
 
 		/**
@@ -116,7 +116,7 @@ namespace libcrypto
 				rotL28(keyLeft, RotationSchedule[i]);
 				rotL28(keyRight, RotationSchedule[i]);
 
-				ctx->RoundKeys[action == Action::ENCRYPT ? i : 15-i] = permute(join56(keyLeft, keyRight), KeyPC56To48, 56, 48);
+				ctx->RoundKeys[action == ENCRYPT ? i : 15-i] = permute(join56(keyLeft, keyRight), KeyPC56To48, 56, 48);
 			}
 
 			return ctx;
@@ -167,7 +167,7 @@ namespace libcrypto
 
 		int __check_key_internal(uint64_t key)
 		{
-			KeyStrength strength = CheckKey(key);
+			auto strength = CheckKey(key);
 
 #if !defined(NOENFORCE_WEAK_KEYS)
 			if(strength == WEAK)
