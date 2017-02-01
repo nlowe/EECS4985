@@ -141,6 +141,11 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(ALLOW_CBC)' != ''">
+    <ClCompile>
+      <AdditionalOptions>/DALLOW_CBC=1 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="opts.h" />
     <ClInclude Include="stdafx.h" />

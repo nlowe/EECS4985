@@ -138,6 +138,11 @@ public:
 		{
 			Mode = libcrypto::Mode::CBC;
 			IV.SetValue(DEFAULT_IV);
+#if !defined(ALLOW_CBC)
+			std::cerr << "CBC is disabled for this project\n";
+			Errors = true;
+			return;
+#endif
 		}
 		else
 		{
