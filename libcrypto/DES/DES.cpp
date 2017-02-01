@@ -48,20 +48,20 @@ namespace libcrypto
 			uint64_t RoundKeys[16];
 		} Context;
 
-		/**
-		 * Permutes the provided value using the specified table and input / output sizes
-		 */
-		inline uint64_t permute(uint64_t in, const uint8_t* table, size_t inputSize, size_t outputSize)
-		{
-			uint64_t out = 0;
-
-			for(size_t i = 0; i < outputSize; i++)
-			{
-				out |= ((in >> inputSize - table[outputSize - 1 - i]) & 1) << i;
-			}
-
-			return out;
-		}
+//		/**
+//		 * Permutes the provided value using the specified table and input / output sizes
+//		 */
+//		inline uint64_t permute(uint64_t in, const uint8_t* table, size_t inputSize, size_t outputSize)
+//		{
+//			uint64_t out = 0;
+//
+//			for(size_t i = 0; i < outputSize; i++)
+//			{
+//				out |= ((in >> inputSize - table[outputSize - 1 - i]) & 1) << i;
+//			}
+//
+//			return out;
+//		}
 
 		/**
 		* Runs the specified block through the substitution boxes
@@ -109,14 +109,14 @@ namespace libcrypto
 			//   1. Compress and Permute the key into 56 bits
 			//   2. Split the key into two 28 bit halves
 			uint64_t keyLeft, keyRight;
-			split56(permute(key, KeyPC64To56, 64, 56), keyLeft, keyRight);
+			split56(KeyPC64To56_unrolled(key), keyLeft, keyRight);
 
 			for(auto i = 0; i < 16; i++)
 			{
 				rotL28(keyLeft, RotationSchedule[i]);
 				rotL28(keyRight, RotationSchedule[i]);
 
-				ctx->RoundKeys[action == ENCRYPT ? i : 15-i] = permute(join56(keyLeft, keyRight), KeyPC56To48, 56, 48);
+				ctx->RoundKeys[action == ENCRYPT ? i : 15-i] = KeyPC56To48_unrolled(join56(keyLeft, keyRight));
 			}
 
 			return ctx;
@@ -128,7 +128,7 @@ namespace libcrypto
 		uint64_t TransformBlock(Context* ctx, uint64_t block)
 		{
 			// Perform the initial permutation on the plaintext
-			auto permutedBlock = permute(block, InitalBlockPermutation, 64, 64);
+			auto permutedBlock = InitialBlockPermutation_unrolled(block);
 
 			// Split the plaintext into 32 bit left and right halves
 			uint64_t left, right;
@@ -140,7 +140,7 @@ namespace libcrypto
 			for(auto i = 0; i < 16; i++)
 			{
 				// Expand and permute the right half of the block to 48 bits
-				auto expandedRightHalf = permute(right, BlockPE32To48, 32, 48) & MASK48;
+				auto expandedRightHalf = BlockPE32To48_unrolled(right);
 
 				// XOR with the round key
 				// Important note: The correct round key (different order for encrypt vs. decyrpt) is taken care of when initializing the DES Context
@@ -151,7 +151,7 @@ namespace libcrypto
 				auto substituted = substitute(expandedRightHalf);
 
 				// Perform the final permutation
-				auto ciphertext = permute(substituted, BlockP32, 32, 32) & MASK32;
+				auto ciphertext = BlockP32_unrolled(substituted);
 
 				// XOR with the left half
 				ciphertext ^= left;
@@ -162,7 +162,7 @@ namespace libcrypto
 			}
 
 			auto finalBlock = join64(right, left);
-			return permute(finalBlock, FinalBlockPermutation, 64, 64);
+			return FinalBlockPermutation_unrolled(finalBlock);
 		}
 
 		int __check_key_internal(uint64_t key)
