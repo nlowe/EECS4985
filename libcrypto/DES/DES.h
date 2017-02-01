@@ -24,8 +24,6 @@
 #pragma once
 #include <string>
 #include "Boxes.h"
-#include "../libcrypto.h"
-#include "../Util.h"
 #include "../export.h"
 
 #define DES_BLOCK_SIZE_BYTES 8
@@ -58,19 +56,21 @@ namespace libcrypto
 		LIBCRYPTO_PUB KeyStrength CheckKey(uint64_t key);
 
 		/**
-		* Encrypt the file at the specified path to the specified output path, using the provided key.
-		*
-		* If the mode is CBC, the IV should also be specified
+		* Encrypt the file at the specified path to the specified output path, using the provided key in ECB mode.
 		*/
 		LIBCRYPTO_PUB int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key);
+		/**
+		 * Encrypt the file at the specified path to the specified output path, using the provided key and initialization vector in CBC mode.
+		 */
 		LIBCRYPTO_PUB int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key, uint64_t IV);
 
 		/**
-		* Decrypt the file at the specified path to the specified output path, using the provided key.
-		*
-		* If the mode is CBC, the IV should also be specified
-		*/
+		 * Decrypt the file at the specified path to the specified output path, using the provided key in ECB mode.
+		 */
 		LIBCRYPTO_PUB int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key);
+		/**
+		 * Decrypt the file at the specified path to the specified output path, using the provided key and initialization vector in CBC mode.
+		 */
 		LIBCRYPTO_PUB int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key, uint64_t IV);
 	}
 }

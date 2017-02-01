@@ -34,8 +34,8 @@ namespace libcrypto
 {
 	namespace des
 	{
-		int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key, Optional<uint64_t> CBCInitialVector);
-		int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key, Optional<uint64_t> CBCInitialVector);
+		int encrypt_file_impl(std::string, std::string, uint64_t, Optional<uint64_t>);
+		int decrypt_file_impl(std::string, std::string, uint64_t, Optional<uint64_t>);
 
 		/**
 		 * A struct containing the context for DES
@@ -47,21 +47,6 @@ namespace libcrypto
 			Action Action;
 			uint64_t RoundKeys[16];
 		} Context;
-
-//		/**
-//		 * Permutes the provided value using the specified table and input / output sizes
-//		 */
-//		inline uint64_t permute(uint64_t in, const uint8_t* table, size_t inputSize, size_t outputSize)
-//		{
-//			uint64_t out = 0;
-//
-//			for(size_t i = 0; i < outputSize; i++)
-//			{
-//				out |= ((in >> inputSize - table[outputSize - 1 - i]) & 1) << i;
-//			}
-//
-//			return out;
-//		}
 
 		/**
 		* Runs the specified block through the substitution boxes
@@ -109,14 +94,14 @@ namespace libcrypto
 			//   1. Compress and Permute the key into 56 bits
 			//   2. Split the key into two 28 bit halves
 			uint64_t keyLeft, keyRight;
-			split56(KeyPC64To56_unrolled(key), keyLeft, keyRight);
+			split56(KeyPC64To56(key), keyLeft, keyRight);
 
 			for(auto i = 0; i < 16; i++)
 			{
 				rotL28(keyLeft, RotationSchedule[i]);
 				rotL28(keyRight, RotationSchedule[i]);
 
-				ctx->RoundKeys[action == ENCRYPT ? i : 15-i] = KeyPC56To48_unrolled(join56(keyLeft, keyRight));
+				ctx->RoundKeys[action == ENCRYPT ? i : 15-i] = KeyPC56To48(join56(keyLeft, keyRight));
 			}
 
 			return ctx;
@@ -128,7 +113,7 @@ namespace libcrypto
 		uint64_t TransformBlock(Context* ctx, uint64_t block)
 		{
 			// Perform the initial permutation on the plaintext
-			auto permutedBlock = InitialBlockPermutation_unrolled(block);
+			auto permutedBlock = InitialBlockPermutation(block);
 
 			// Split the plaintext into 32 bit left and right halves
 			uint64_t left, right;
@@ -140,7 +125,7 @@ namespace libcrypto
 			for(auto i = 0; i < 16; i++)
 			{
 				// Expand and permute the right half of the block to 48 bits
-				auto expandedRightHalf = BlockPE32To48_unrolled(right);
+				auto expandedRightHalf = BlockPE32To48(right);
 
 				// XOR with the round key
 				// Important note: The correct round key (different order for encrypt vs. decyrpt) is taken care of when initializing the DES Context
@@ -151,7 +136,7 @@ namespace libcrypto
 				auto substituted = substitute(expandedRightHalf);
 
 				// Perform the final permutation
-				auto ciphertext = BlockP32_unrolled(substituted);
+				auto ciphertext = BlockP32(substituted);
 
 				// XOR with the left half
 				ciphertext ^= left;
@@ -162,7 +147,7 @@ namespace libcrypto
 			}
 
 			auto finalBlock = join64(right, left);
-			return FinalBlockPermutation_unrolled(finalBlock);
+			return FinalBlockPermutation(finalBlock);
 		}
 
 		int __check_key_internal(uint64_t key)
@@ -208,15 +193,15 @@ namespace libcrypto
 		LIBCRYPTO_PUB int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key)
 		{
 			Optional<uint64_t> dummy;
-			return EncryptFile(inputFile, outputFile, key, dummy);
+			return encrypt_file_impl(inputFile, outputFile, key, dummy);
 		}
 
 		LIBCRYPTO_PUB int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key, uint64_t iv)
 		{
-			return EncryptFile(inputFile, outputFile, key, Optional<uint64_t>(iv));
+			return encrypt_file_impl(inputFile, outputFile, key, Optional<uint64_t>(iv));
 		}
 
-		int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key, Optional<uint64_t> CBCInitializationVector)
+		int encrypt_file_impl(std::string inputFile, std::string outputFile, uint64_t key, Optional<uint64_t> CBCInitializationVector)
 		{
 			auto keyCheck = __check_key_internal(key);
 			if (keyCheck != SUCCESS) return keyCheck;
@@ -332,15 +317,15 @@ namespace libcrypto
 		LIBCRYPTO_PUB int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key)
 		{
 			Optional<uint64_t> dummy;
-			return DecryptFile(inputFile, outputFile, key, dummy);
+			return decrypt_file_impl(inputFile, outputFile, key, dummy);
 		}
 
 		LIBCRYPTO_PUB int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key, uint64_t iv)
 		{
-			return DecryptFile(inputFile, outputFile, key, Optional<uint64_t>(iv));
+			return decrypt_file_impl(inputFile, outputFile, key, Optional<uint64_t>(iv));
 		}
 
-		int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key, Optional<uint64_t> CBCInitialVector)
+		int decrypt_file_impl(std::string inputFile, std::string outputFile, uint64_t key, Optional<uint64_t> CBCInitialVector)
 		{
 			auto ctx = init(key, CBCInitialVector, DECRYPT);
 
