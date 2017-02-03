@@ -134,9 +134,39 @@ Task("Test-CBC")
     }
 });
 
+Task("Test-CanDecryptProfessorFile")
+    .IsDependentOn("Build")
+    .Does(() =>
+{
+    var decryptedFile = "./" + (Guid.NewGuid()).ToString() + ".desdec";
+
+    var encryptExitCode = StartProcess("./x64/" + configuration + "/DES.exe", new ProcessSettings ()
+        .WithArguments(args => args
+            .Append("-d")
+            .AppendQuoted("Pa$$w0rd")
+            .Append("ECB")
+            .AppendQuoted("./Test Files/Shakespeare.lgt.des")
+            .AppendQuoted(decryptedFile)
+        )
+    );
+
+    if(encryptExitCode != 0) throw new Exception("Encryption failed with exit code " + encryptExitCode);
+
+    var decrypted = CalculateFileHash(decryptedFile).ToHex();
+
+    DeleteFile(decryptedFile);
+    Information("Decrypted Plaintext: " + decrypted);
+
+    if(decrypted.ToUpper() != "F3D607A3BB724DD2C820AB3DBC4DADB53D4D97DF01784A7B54E887DFC4BEEFB8")
+    {
+        throw new Exception("Something broke (decrypted file is not correct)");
+    }
+});
+
 Task("Test")
     .IsDependentOn("Test-ECB")
-    .IsDependentOn("Test-CBC");
+    .IsDependentOn("Test-CBC")
+    .IsDependentOn("Test-CanDecryptProfessorFile");
 
 Task("Concat")
     .Does(() =>

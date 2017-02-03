@@ -53,23 +53,14 @@ namespace libcrypto
 		*/
 		inline uint64_t substitute(uint64_t in)
 		{
-			auto b1 = extract6(in, 1);
-			auto b2 = extract6(in, 2);
-			auto b3 = extract6(in, 3);
-			auto b4 = extract6(in, 4);
-			auto b5 = extract6(in, 5);
-			auto b6 = extract6(in, 6);
-			auto b7 = extract6(in, 7);
-			auto b8 = extract6(in, 8);
-
-			return S0[(srow(b1) << 4) + scol(b1)] << 28 |
-				S1[(srow(b2) << 4) + scol(b2)] << 24 |
-				S2[(srow(b3) << 4) + scol(b3)] << 20 |
-				S3[(srow(b4) << 4) + scol(b4)] << 16 |
-				S4[(srow(b5) << 4) + scol(b5)] << 12 |
-				S5[(srow(b6) << 4) + scol(b6)] << 8  |
-				S6[(srow(b7) << 4) + scol(b7)] << 4  |
-				S7[(srow(b8) << 4) + scol(b8)];
+			return S0[extract6(in, 1)] |
+				S1[extract6(in, 2)] |
+				S2[extract6(in, 3)] |
+				S3[extract6(in, 4)] |
+				S4[extract6(in, 5)] |
+				S5[extract6(in, 6)] |
+				S6[extract6(in, 7)] |
+				S7[extract6(in, 8)];
 		}
 
 		/**
