@@ -31,7 +31,6 @@ Task("Build")
     Information("Possibly-Weak Key Setting: " + possiblyWeakKeyProp);
 
     MSBuild("./EECS4985.sln", cfg => cfg
-        //.SetVerbosity(Verbosity.Minimal)
         .SetConfiguration(configuration)
         .UseToolVersion(MSBuildToolVersion.VS2015)
         .SetMSBuildPlatform(MSBuildPlatform.x64)
