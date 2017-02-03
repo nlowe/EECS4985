@@ -388,6 +388,11 @@ namespace libcrypto
 
 			// How much padding did we use?
 			auto padding = len - (decryptedHeader & MASK32);
+			if(padding > 7)
+			{
+				std::cerr << "Unable to decode file (Incorrect padding read). Either this is not a DES Encrypted file or the file is corrupt" << std::endl;
+				return ERR_BAD_INPUT;
+			}
 
 			size_t written = 0;
 			size_t currentBlock = 0;
