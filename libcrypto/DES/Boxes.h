@@ -367,6 +367,10 @@ inline uint64_t FinalBlockPermutation(uint64_t in)
 	return out;
 }
 
+// The compiler is confused. None of these are narrowing conversions...
+#pragma warning( push )
+#pragma warning( disable : 4838 )
+
 /**
  * The first substitution box (pre-sorted and pre-shifted)
  */
@@ -454,6 +458,8 @@ const uint64_t S7[] =
 	 7,  2, 11,  1,  4, 14,  1,  7,  9,  4, 12, 10, 14,  8,  2, 13,
 	 0, 15,  6, 12, 10,  9, 13,  0, 15,  3,  3,  5,  5,  6,  8, 11
 };
+
+#pragma warning( pop )
 
 /**
  * The straight 32-32 permutation to mix the half-block in the fistel round

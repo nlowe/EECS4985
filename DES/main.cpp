@@ -35,7 +35,7 @@ void printHelp();
 int main(int argc, char* argv[])
 {
 	// Seed the RNG
-	srand(time(nullptr));
+	srand(static_cast<unsigned int>(time(nullptr)));
 
 	// Parse Options
 	Options opts(argc, argv);
