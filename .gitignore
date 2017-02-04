@@ -10,6 +10,10 @@ tools/
 !tools/nuget.exe
 concat.cxx
 
+# Analysis
+*.tsv
+[Aa]nalysis/
+
 # Encrypted Files
 *.des*
 *.desdec*
