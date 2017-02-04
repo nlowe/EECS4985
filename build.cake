@@ -13,12 +13,6 @@ Task("Clean")
     CleanDirectories("./**/x64");
 });
 
-Task("Restore")
-	.Does(() => 
-{
-	NuGetRestore("./EECS4985.sln");
-});
-
 Task("Build")
     .Does(() =>
 {
