@@ -25,31 +25,6 @@
 #pragma once
 #include <cstdint>
 #include "../Mask.h"
-#include <random>
-
-/**
-* Generates a random 32-bit unsigned integer (Half a block)
-*/
-inline uint32_t RandomHalfBlock()
-{
-	std::random_device rd;
-	std::mt19937_64 gen(rd());
-
-	std::uniform_int_distribution<uint32_t> half;
-	return half(gen);
-}
-
-/**
-* Generates a random 64-bit unsigned integer (Full Block)
-*/
-inline uint64_t RandomBlock()
-{
-	std::random_device rd;
-	std::mt19937_64 gen(rd());
-
-	std::uniform_int_distribution<uint64_t> full;
-	return full(gen);
-}
 
 /**
 * Splits the specified 56 bit number into a two 28 bit halves.

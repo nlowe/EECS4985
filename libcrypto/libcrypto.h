@@ -23,6 +23,8 @@
  */
 
 #pragma once
+#include <cstdint>
+#include <random>
 
 namespace libcrypto
 {
@@ -40,6 +42,24 @@ namespace libcrypto
 		UNKNOWN_ACTION
 	};
 
+	inline uint64_t Random32()
+	{
+		std::random_device rd;
+		std::mt19937_64 gen(rd());
+
+		std::uniform_int_distribution<uint32_t> half;
+		return half(gen) | 0ull;
+	}
+
+	inline uint64_t Random64()
+	{
+		std::random_device rd;
+		std::mt19937_64 gen(rd());
+
+		std::uniform_int_distribution<uint64_t> full;
+		return full(gen);
+	}
+
 	const int SUCCESS = 0;
 	const int ERR_MODE = -2;
 	const int ERR_ACTION = -3;
@@ -47,4 +67,5 @@ namespace libcrypto
 	const int ERR_TOO_BIG = -5;
 	const int ERR_BAD_OUTPUT = -6;
 	const int ERR_KEY_TOO_WEAK = -7;
+	const int ERR_SIZE = -8;
 }
