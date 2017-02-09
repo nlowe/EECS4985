@@ -197,6 +197,7 @@ namespace libcrypto
 				blocks[i++] = _byteswap_uint64(encrypted);
 			}
 
+			delete ctx;
 			return SUCCESS;
 		}
 
@@ -223,6 +224,7 @@ namespace libcrypto
 				blocks[i++] = _byteswap_uint64(encrypted);
 			}
 
+			delete ctx;
 			return SUCCESS;
 		}
 
@@ -245,6 +247,7 @@ namespace libcrypto
 				blocks[i++] = _byteswap_uint64(decrypted);
 			}
 
+			delete ctx;
 			return SUCCESS;
 		}
 
@@ -271,6 +274,7 @@ namespace libcrypto
 				blocks[i++] = _byteswap_uint64(decrypted);
 			}
 
+			delete ctx;
 			return SUCCESS;
 		}
 	}
