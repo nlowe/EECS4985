@@ -56,21 +56,21 @@ namespace libcrypto
 		LIBCRYPTO_PUB KeyStrength CheckKey(uint64_t key);
 
 		/**
-		* Encrypt the file at the specified path to the specified output path, using the provided key in ECB mode.
-		*/
-		LIBCRYPTO_PUB int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key);
-		/**
-		 * Encrypt the file at the specified path to the specified output path, using the provided key and initialization vector in CBC mode.
+		 * Encrypt the buffer of the specified length using the provided key in ECB mode. The buffer must be a multiple of 8 bytes
 		 */
-		LIBCRYPTO_PUB int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key, uint64_t IV);
+		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key);
+		/**
+		 * Encrypt the buffer of the specified length using the provided key and initialization vector in CBC mode. The buffer must be a multiple of 8 bytes
+		 */
+		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key, uint64_t IV);
 
 		/**
-		 * Decrypt the file at the specified path to the specified output path, using the provided key in ECB mode.
+		 * Encrypt the buffer of the specified length using the provided key in ECB mode. The buffer must be a multiple of 8 bytes
 		 */
-		LIBCRYPTO_PUB int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key);
+		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, uint64_t key);
 		/**
-		 * Decrypt the file at the specified path to the specified output path, using the provided key and initialization vector in CBC mode.
+		 * Encrypt the buffer of the specified length using the provided key and initialization vector in CBC mode. The buffer must be a multiple of 8 bytes
 		 */
-		LIBCRYPTO_PUB int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key, uint64_t IV);
+		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, uint64_t key, uint64_t IV);
 	}
 }

@@ -23,6 +23,8 @@
  */
 
 #pragma once
+#include <cstdint>
+#include <random>
 
 namespace libcrypto
 {
@@ -40,6 +42,39 @@ namespace libcrypto
 		UNKNOWN_ACTION
 	};
 
+	inline uint64_t Random32()
+	{
+		std::random_device rd;
+		std::mt19937_64 gen(rd());
+
+		std::uniform_int_distribution<uint32_t> half;
+		return half(gen) | 0ull;
+	}
+
+	inline uint64_t Random64()
+	{
+		std::random_device rd;
+		std::mt19937_64 gen(rd());
+
+		std::uniform_int_distribution<uint64_t> full;
+		return full(gen);
+	}
+
+	/**
+	 * Pack the specified 64-bit integer into the buffer starting at the specified offset, accounting for endianness
+	 */
+	inline void buffStuff64(char* buff, size_t offset, uint64_t block)
+	{
+		buff[offset]     = block >> 56 & 0xFF;
+		buff[offset + 1] = block >> 48 & 0xFF;
+		buff[offset + 2] = block >> 40 & 0xFF;
+		buff[offset + 3] = block >> 32 & 0xFF;
+		buff[offset + 4] = block >> 24 & 0xFF;
+		buff[offset + 5] = block >> 16 & 0xFF;
+		buff[offset + 6] = block >>  8 & 0xFF;
+		buff[offset + 7] = block       & 0xFF;
+	}
+
 	const int SUCCESS = 0;
 	const int ERR_MODE = -2;
 	const int ERR_ACTION = -3;
@@ -47,4 +82,5 @@ namespace libcrypto
 	const int ERR_TOO_BIG = -5;
 	const int ERR_BAD_OUTPUT = -6;
 	const int ERR_KEY_TOO_WEAK = -7;
+	const int ERR_SIZE = -8;
 }

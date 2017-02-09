@@ -27,8 +27,6 @@
 #include "DES.h"
 #include "Math.h"
 #include <iostream>
-#include <fstream>
-#include <chrono>
 
 namespace libcrypto
 {
@@ -42,8 +40,6 @@ namespace libcrypto
 		 */
 		typedef struct
 		{
-			Mode OperationMode;
-			uint64_t IV;
 			Action Action;
 			uint64_t RoundKeys[16];
 		} Context;
@@ -66,19 +62,9 @@ namespace libcrypto
 		/**
 		* Initialize the DES Context using the specified key
 		*/
-		Context* init(uint64_t key, Optional<uint64_t> CBCInitializationVector, libcrypto::Action action)
+		Context* init(uint64_t key, libcrypto::Action action)
 		{
 			auto ctx = new Context;
-
-			if(CBCInitializationVector.HasValue())
-			{
-				ctx->IV = CBCInitializationVector.GetValue();
-				ctx->OperationMode = CBC;
-			}
-			else
-			{
-				ctx->OperationMode = ECB;
-			}
 			ctx->Action = action;
 			
 			// Initialize the key
@@ -181,243 +167,113 @@ namespace libcrypto
 			return SUCCESS;
 		}
 
-		LIBCRYPTO_PUB int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key)
+		inline bool checkSize(size_t len)
 		{
-			Optional<uint64_t> dummy;
-			return encrypt_file_impl(inputFile, outputFile, key, dummy);
+			if(len % 8 != 0)
+			{
+				std::cerr << "Input must be a multiple of 8 bytes (got " << len << " bytes)" << std::endl;
+				return false;
+			}
+
+			return true;
 		}
 
-		LIBCRYPTO_PUB int EncryptFile(std::string inputFile, std::string outputFile, uint64_t key, uint64_t iv)
+		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key)
 		{
-			return encrypt_file_impl(inputFile, outputFile, key, Optional<uint64_t>(iv));
-		}
+			if (!checkSize(len)) return ERR_SIZE;
 
-		int encrypt_file_impl(std::string inputFile, std::string outputFile, uint64_t key, Optional<uint64_t> CBCInitializationVector)
-		{
 			auto keyCheck = __check_key_internal(key);
 			if (keyCheck != SUCCESS) return keyCheck;
 
-			auto ctx = init(key, CBCInitializationVector, ENCRYPT);
+			auto ctx = init(key, ENCRYPT);
+			auto blocks = reinterpret_cast<uint64_t*>(data);
+			auto blockCount = len / 8;
 
-			// Open the input file for read in binary mode
-			std::ifstream reader;
-			reader.open(inputFile, std::ios::binary | std::ios::ate | std::ios::in);
-
-			if(!reader.good())
+			size_t i = 0;
+			while(i < blockCount)
 			{
-				std::cerr << "Unable to open file for read: " << inputFile << std::endl;
-				return ERR_BAD_INPUT;
+				auto block = _byteswap_uint64(blocks[i]);
+				auto encrypted = TransformBlock(ctx, block);
+				blocks[i++] = _byteswap_uint64(encrypted);
 			}
 
-			// How big is it?
-			size_t len = reader.tellg();
-			if (len > MASK31)
-			{
-				std::cerr << "Input file too large according to spec. Must be less than 2GiB" << std::endl;
-				return ERR_TOO_BIG;
-			}
-
-			// Seek to the start of the file
-			reader.seekg(0, std::ios::beg);
-
-			// Open the output file for write in binary mode
-			std::ofstream writer;
-			writer.open(outputFile, std::ios::binary | std::ios::out);
-
-			if(!writer.good())
-			{
-				std::cerr << "Unable to open file for write: " << outputFile << std::endl;
-				reader.close();
-				return ERR_BAD_OUTPUT;
-			}
-
-			auto start = std::chrono::high_resolution_clock::now();
-
-			// Write the length of the file so we can determine how much padding we used when decrypting
-			auto headerBlock = join64(RandomHalfBlock(), len);
-
-			// Used in CBC mode only
-			if(ctx->OperationMode == CBC)
-			{
-				headerBlock ^= ctx->IV;
-			}
-
-			// Encrypt the header
-			auto encryptedHeader = TransformBlock(ctx, headerBlock);
-			auto previousBlock = encryptedHeader;
-
-			// Windows is LE. Since that's the only platform we support, always swap the byte order
-			auto outputBuffer = _byteswap_uint64(encryptedHeader);
-
-			// Write encrypted header
-			writer.write(reinterpret_cast<const char*>(&outputBuffer), DES_BLOCK_SIZE_BYTES);
-
-			auto needsPadding = len % 8 != 0;
-
-			// Allocate enough froom for the file
-			auto bytes = new uint64_t[ len/8 + (needsPadding ? 1 : 0)]{ 0 };
-			if(needsPadding)
-			{
-				// Initialize the last block to a random block for padding
-				// The high bytes will be overwritten with actual data
-				bytes[len/8] = RandomBlock();
-			}
-
-			// Read the file. Yup, that's totally a char* buffer
-			reader.read(reinterpret_cast<char*>(bytes), len);
-			reader.close();
-
-			size_t written = 0;
-			size_t currentBlock = 0;
-			while(written < len)
-			{
-				// Windows is LE. Since that's the only platform we support, always swap the byte order
-				auto block = _byteswap_uint64(bytes[currentBlock++]);
-				written += DES_BLOCK_SIZE_BYTES;
-
-				// Encrypt the block
-				if(ctx->OperationMode == CBC)
-				{
-					block ^= previousBlock;
-				}
-				auto encryptedBlock = TransformBlock(ctx, block);
-				previousBlock = encryptedBlock;
-
-				// Windows is LE. Since that's the only platform we support, always swap the byte order
-				outputBuffer = _byteswap_uint64(encryptedBlock);
-
-				// Write block
-				writer.write(reinterpret_cast<const char*>(&outputBuffer), DES_BLOCK_SIZE_BYTES);
-			}
-
-			writer.flush();
-			writer.close();
-
-			auto end = std::chrono::high_resolution_clock::now();
-
-			// Convert to floating point milliseconds
-			std::chrono::duration<double, std::milli> duration = end - start;
-
-			std::cout << "Encrypted " << currentBlock << " blocks in " << duration.count() << "ms" << std::endl;
-
-			delete[] bytes;
 			delete ctx;
 			return SUCCESS;
 		}
 
-		LIBCRYPTO_PUB int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key)
+		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key, uint64_t iv)
 		{
-			Optional<uint64_t> dummy;
-			return decrypt_file_impl(inputFile, outputFile, key, dummy);
+			if (!checkSize(len)) return ERR_SIZE;
+
+			auto keyCheck = __check_key_internal(key);
+			if (keyCheck != SUCCESS) return keyCheck;
+
+			auto ctx = init(key, ENCRYPT);
+			auto blocks = reinterpret_cast<uint64_t*>(data);
+			auto blockCount = len / 8;
+
+			auto previousBlock = iv;
+
+			size_t i = 0;
+			while(i < blockCount)
+			{
+				auto block = _byteswap_uint64(blocks[i]);
+				block ^= previousBlock;
+				auto encrypted = TransformBlock(ctx, block);
+				previousBlock = encrypted;
+				blocks[i++] = _byteswap_uint64(encrypted);
+			}
+
+			delete ctx;
+			return SUCCESS;
 		}
 
-		LIBCRYPTO_PUB int DecryptFile(std::string inputFile, std::string outputFile, uint64_t key, uint64_t iv)
+		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, uint64_t key)
 		{
-			return decrypt_file_impl(inputFile, outputFile, key, Optional<uint64_t>(iv));
+			if (!checkSize(len)) return ERR_SIZE;
+
+			auto keyCheck = __check_key_internal(key);
+			if (keyCheck != SUCCESS) return keyCheck;
+
+			auto ctx = init(key, DECRYPT);
+			auto blocks = reinterpret_cast<uint64_t*>(data);
+			auto blockCount = len / 8;
+
+			size_t i = 0;
+			while(i < blockCount)
+			{
+				auto block = _byteswap_uint64(blocks[i]);
+				auto decrypted = TransformBlock(ctx, block);
+				blocks[i++] = _byteswap_uint64(decrypted);
+			}
+
+			delete ctx;
+			return SUCCESS;
 		}
 
-		int decrypt_file_impl(std::string inputFile, std::string outputFile, uint64_t key, Optional<uint64_t> CBCInitialVector)
+		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, uint64_t key, uint64_t iv)
 		{
-			auto ctx = init(key, CBCInitialVector, DECRYPT);
+			if (!checkSize(len)) return ERR_SIZE;
 
-			// Open the input file for read in binary mode
-			std::ifstream reader;
-			reader.open(inputFile, std::ios::binary | std::ios::ate | std::ios::in);
+			auto keyCheck = __check_key_internal(key);
+			if (keyCheck != SUCCESS) return keyCheck;
 
-			if(!reader.good())
+			auto ctx = init(key, DECRYPT);
+			auto blocks = reinterpret_cast<uint64_t*>(data);
+			auto blockCount = len / 8;
+
+			auto previousBlock = iv;
+
+			size_t i = 0;
+			while(i < blockCount)
 			{
-				std::cerr << "Unable to open file for read: " << inputFile << std::endl;
-				return ERR_BAD_INPUT;
-			}
-
-			// How big is it?
-			size_t len = reader.tellg();
-			len -= DES_BLOCK_SIZE_BYTES;
-			if (len > MASK31)
-			{
-				std::cerr << "Input file too large according to spec. Must be less than 2GiB" << std::endl;
-				return ERR_TOO_BIG;
-			}
-
-			if(len % 8 != 0)
-			{
-				std::cerr << "Input file not 64-bit aligned" << std::endl;
-				return ERR_BAD_INPUT;
-			}
-
-			// Seek to the start of the file
-			reader.seekg(0, std::ios::beg);
-
-			// Open the output file for write in binary mode
-			std::ofstream writer;
-			writer.open(outputFile, std::ios::binary | std::ios::out);
-
-			if(!writer.good())
-			{
-				std::cerr << "Unable to open file for write: " << outputFile << std::endl;
-				reader.close();
-				return ERR_BAD_OUTPUT;
-			}
-
-			auto start = std::chrono::high_resolution_clock::now();
-			auto bytes = new uint64_t[len/8];
-
-			// Read in the header, and then the file
-			char rawheader[8] = { 0 };
-			reader.read(rawheader, DES_BLOCK_SIZE_BYTES);
-			reader.read(reinterpret_cast<char*>(bytes), len);
-
-			// Read the length of the file so we can determine how much padding we used when encrypting
-			auto headerBlock = extract64FromBuff(rawheader, 0);
-
-			auto decryptedHeader = TransformBlock(ctx, headerBlock);
-			if(ctx->OperationMode == CBC)
-			{
-				decryptedHeader ^= ctx->IV;
-			}
-			auto previousBlock = headerBlock;
-
-			// How much padding did we use?
-			auto padding = len - (decryptedHeader & MASK32);
-			if(padding > 7)
-			{
-				std::cerr << "Unable to decode file (Incorrect padding read). Either this is not a DES Encrypted file or the file is corrupt" << std::endl;
-				return ERR_BAD_INPUT;
-			}
-
-			size_t written = 0;
-			size_t currentBlock = 0;
-			while(written != len)
-			{
-				// Windows is LE. Since that's the only platform we support, always swap the byte order
-				auto block = _byteswap_uint64(bytes[currentBlock++]);
-				written += DES_BLOCK_SIZE_BYTES;
-
-				// Decrypt the block
-				auto decryptedBlock = TransformBlock(ctx, block);
-				if(ctx->OperationMode == CBC)
-				{
-					decryptedBlock ^= previousBlock;
-				}
+				auto block = _byteswap_uint64(blocks[i]);
+				auto decrypted = TransformBlock(ctx, block);
+				decrypted ^= previousBlock;
 				previousBlock = block;
-
-				auto isPaddingBlock = written == len && padding > 0;
-		
-				// Windows is LE. Since that's the only platform we support, always swap the byte order
-				auto outputBuffer = _byteswap_uint64(decryptedBlock);
-
-				// If we're at the padding block (final block), only write the real bytes, not the padding
-				writer.write(reinterpret_cast<const char*>(&outputBuffer), isPaddingBlock ? 8-padding : DES_BLOCK_SIZE_BYTES);
+				blocks[i++] = _byteswap_uint64(decrypted);
 			}
 
-			auto end = std::chrono::high_resolution_clock::now();
-
-			// Convert to floating point milliseconds
-			std::chrono::duration<double, std::milli> duration = end - start;
-
-			std::cout << "Decrypted " << currentBlock << " blocks in " << duration.count() << "ms" << std::endl;
-	 
-			delete[] bytes;
 			delete ctx;
 			return SUCCESS;
 		}
