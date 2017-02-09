@@ -23,13 +23,13 @@
  */
 
 #include "stdafx.h"
+#include "opts.h"
 #include "../libcrypto/libcrypto.h"
+#include "../libcrypto/Mask.h"
 #include "../libcrypto/DES/DES.h"
 #include <iostream>
 #include <fstream>
 #include <ctime>
-#include "opts.h"
-#include "../libcrypto/Mask.h"
 #include <chrono>
 
 // Forward-declare so main is at the top as per project spec
@@ -84,34 +84,21 @@ int main(int argc, char* argv[])
 
 	if(opts.Action == libcrypto::Action::ENCRYPT)
 	{
-		auto headerBlock = libcrypto::Random32() << 31 | len;
+		auto headerBlock = libcrypto::Random32() << 32 | len;
 		auto needsPadding = len % 8 != 0;
-		auto buffSize = len + 1 + (needsPadding ? 8 : 0);
+		auto buffSize = len + 8 + (needsPadding ? 8 - (len % 8) : 0);
 		buff = new char[buffSize]{ 0 };
 
 		// Include the length of the file so we can determine how much padding we used when decrypting
-		buff[0] = headerBlock >> 28 & 0xFF;
-		buff[1] = headerBlock >> 24 & 0xFF;
-		buff[2] = headerBlock >> 20 & 0xFF;
-		buff[3] = headerBlock >> 16 & 0xFF;
-		buff[4] = headerBlock >> 12 & 0xFF;
-		buff[5] = headerBlock >> 8 & 0xFF;
-		buff[6] = headerBlock >> 4 & 0xFF;
-		buff[7] = headerBlock & 0xFF;
+		libcrypto::buffStuff64(buff, 0, headerBlock);
 
 		if(needsPadding)
 		{
 			auto padding = libcrypto::Random64();
-			buff[len/8 + 0] = padding >> 28 & 0xFF;
-			buff[len/8 + 1] = padding >> 24 & 0xFF;
-			buff[len/8 + 2] = padding >> 20 & 0xFF;
-			buff[len/8 + 3] = padding >> 16 & 0xFF;
-			buff[len/8 + 4] = padding >> 12 & 0xFF;
-			buff[len/8 + 5] = padding >> 8 & 0xFF;
-			buff[len/8 + 6] = padding >> 4 & 0xFF;
-			buff[len/8 + 7] = padding & 0xFF;
+			libcrypto::buffStuff64(buff, len / 8, padding);
 		}
 
+		auto ioStart = std::chrono::high_resolution_clock::now();
 		reader.read(buff + 8, len);
 		reader.close();
 
@@ -132,8 +119,12 @@ int main(int argc, char* argv[])
 		{
 			writer.write(buff, buffSize);
 		}
+		writer.close();
 
 		delete[] buff;
+		auto ioEnd = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<double, std::milli> ioTime = ioEnd - ioStart - duration;
 
 		if(result != libcrypto::SUCCESS)
 		{
@@ -141,12 +132,56 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			std::cout << "Encrypted " << buffSize << " bytes in " << duration.count() << "ms" << std::endl;
+			std::cout << "Encrypted " << buffSize << " bytes in " << duration.count() << "ms (+" << ioTime.count() << "ms i/o)" << std::endl;
 		}
 	}
 	else if(opts.Action == libcrypto::Action::DECRYPT)
 	{
-		
+		if(len % 8 != 0)
+		{
+			std::cerr << "Input file not a multiple of 8 bytes. The file is corrupt, not complete, or is not a DES Encrypted file" << std::endl;
+			reader.close();
+			return -1;
+		}
+
+		auto ioStart = std::chrono::high_resolution_clock::now();
+		buff = new char[len];
+		reader.read(buff, len);
+		reader.close();
+
+		auto start = std::chrono::high_resolution_clock::now();
+		int result;
+		if(opts.Mode == libcrypto::Mode::ECB)
+		{
+			result = libcrypto::des::Decrypt(buff, len, opts.Key);
+		}
+		else
+		{
+			result = libcrypto::des::Decrypt(buff, len, opts.Key, opts.IV.GetValue());
+		}
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double, std::milli> duration = end - start;
+
+		auto originalLength = _byteswap_uint64(reinterpret_cast<uint64_t*>(buff)[0]) & MASK32;
+
+		if(result == libcrypto::SUCCESS)
+		{
+			writer.write(buff + 8, originalLength);
+		}
+		writer.close();
+		delete[] buff;
+		auto ioEnd = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<double, std::milli> ioTime = ioEnd - ioStart - duration;
+
+		if(result != libcrypto::SUCCESS)
+		{
+			std::cerr << "DES Failed with result " << result << std::endl;
+		}
+		else
+		{
+			std::cout << "Decrypted " << len << " bytes in " << duration.count() << "ms (+" << ioTime.count() << "ms i/o)" << std::endl;
+		}
 	}
 	else
 	{

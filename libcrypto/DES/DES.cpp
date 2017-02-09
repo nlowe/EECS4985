@@ -167,13 +167,20 @@ namespace libcrypto
 			return SUCCESS;
 		}
 
+		inline bool checkSize(size_t len)
+		{
+			if(len % 8 != 0)
+			{
+				std::cerr << "Input must be a multiple of 8 bytes (got " << len << " bytes)" << std::endl;
+				return false;
+			}
+
+			return true;
+		}
+
 		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key)
 		{
-			if (len % 8 != 0)
-			{
-				std::cerr << "Input must be a multiple of 8 bytes";
-				return ERR_SIZE;
-			}
+			if (!checkSize(len)) return ERR_SIZE;
 
 			auto keyCheck = __check_key_internal(key);
 			if (keyCheck != SUCCESS) return keyCheck;
@@ -195,11 +202,7 @@ namespace libcrypto
 
 		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key, uint64_t iv)
 		{
-			if (len % 8 != 0)
-			{
-				std::cerr << "Input must be a multiple of 8 bytes";
-				return ERR_SIZE;
-			}
+			if (!checkSize(len)) return ERR_SIZE;
 
 			auto keyCheck = __check_key_internal(key);
 			if (keyCheck != SUCCESS) return keyCheck;
@@ -225,11 +228,7 @@ namespace libcrypto
 
 		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, uint64_t key)
 		{
-			if (len % 8 != 0)
-			{
-				std::cerr << "Input must be a multiple of 8 bytes";
-				return ERR_SIZE;
-			}
+			if (!checkSize(len)) return ERR_SIZE;
 
 			auto keyCheck = __check_key_internal(key);
 			if (keyCheck != SUCCESS) return keyCheck;
@@ -251,11 +250,7 @@ namespace libcrypto
 
 		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, uint64_t key, uint64_t iv)
 		{
-			if (len % 8 != 0)
-			{
-				std::cerr << "Input must be a multiple of 8 bytes";
-				return ERR_SIZE;
-			}
+			if (!checkSize(len)) return ERR_SIZE;
 
 			auto keyCheck = __check_key_internal(key);
 			if (keyCheck != SUCCESS) return keyCheck;

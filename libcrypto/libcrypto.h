@@ -60,6 +60,21 @@ namespace libcrypto
 		return full(gen);
 	}
 
+	/**
+	 * Pack the specified 64-bit integer into the buffer starting at the specified offset, accounting for endianness
+	 */
+	inline void buffStuff64(char* buff, size_t offset, uint64_t block)
+	{
+		buff[offset]     = block >> 56 & 0xFF;
+		buff[offset + 1] = block >> 48 & 0xFF;
+		buff[offset + 2] = block >> 40 & 0xFF;
+		buff[offset + 3] = block >> 32 & 0xFF;
+		buff[offset + 4] = block >> 24 & 0xFF;
+		buff[offset + 5] = block >> 16 & 0xFF;
+		buff[offset + 6] = block >>  8 & 0xFF;
+		buff[offset + 7] = block       & 0xFF;
+	}
+
 	const int SUCCESS = 0;
 	const int ERR_MODE = -2;
 	const int ERR_ACTION = -3;
