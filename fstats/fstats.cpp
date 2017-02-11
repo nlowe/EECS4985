@@ -25,6 +25,7 @@
 #include "AVL.h"
 #include <iostream>
 #include <fstream>
+#include "MaxPriorityQueue.h"
 
 // Forward-declare these so main can be at the top as per project spec
 int cleanup(int exitCode);
@@ -44,15 +45,22 @@ AVL* trigraphCount = new AVL();
 /** An AVL Tree for counting blocks */
 AVL* blockCounter = new AVL();
 
+size_t TOP_N = 256;
+
 int main(int argc, char* argv[])
 {
 	if(argc != 3 && argc != 4)
 	{
-		std::cerr << "syntax: fstats <file> <output prefix>" << std::endl;
+		std::cerr << "syntax: fstats <file> <output prefix> [n=256]" << std::endl;
 		return EXIT_ERR_SYNTAX;
 	}
+
+	if(argc == 4)
+	{
+		TOP_N = std::strtoull(argv[3], nullptr, 10);
+	}
 	
-	std::cout << "Collecting stats on '" << argv[1] << "' to '" << argv[2] << "'" << std::endl;
+	std::cout << "Collecting stats on '" << argv[1] << "' to '" << argv[2] << "' (Top " << TOP_N << ")"<< std::endl;
 
 	// Open the fil efor read in binary mode
 	std::ifstream reader;
@@ -149,11 +157,23 @@ void printElements(size_t* counter, size_t size, std::ofstream& writer)
  */
 void printTree(AVL* tree, std::ofstream& writer)
 {
-	writer << "hex\tdec\tcount" << std::endl;
-	tree->each([&](std::pair<uint64_t, size_t>* e){
-		if (e->second == 0) return;
-		writer << std::hex << e->first << "\t" << std::dec << e->first << "\t" << e->second << std::endl;
+	auto q = new MaxPriorityQueue(tree->Size());
+
+	// Enqueue all the things
+	tree->each([q](std::pair<uint64_t, size_t>* e)
+	{
+		q->enqueue(e);
 	});
+
+	writer << "hex\tdec\tcount" << std::endl;
+	for(auto i = 0; i < TOP_N; i++)
+	{
+		auto e = q->dequeue();
+		writer << std::hex << e->first << "\t" << std::dec << e->first << "\t" << e->second << std::endl;
+		if (q->isEmpty()) break;
+	}
+
+	delete q;
 }
 
 /**

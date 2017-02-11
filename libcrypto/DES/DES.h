@@ -22,7 +22,6 @@
  * DES.h - API for the DES algorithm
  */
 #pragma once
-#include <string>
 #include "Boxes.h"
 #include "../export.h"
 
