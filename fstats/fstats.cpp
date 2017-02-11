@@ -46,6 +46,26 @@ AVL* trigraphCount = new AVL();
 AVL* blockCounter = new AVL();
 
 size_t TOP_N = 256;
+auto HAS_NATIVE_POPCOUNT = false;
+
+inline uint64_t popcnt(uint64_t block)
+{
+	if(HAS_NATIVE_POPCOUNT)
+	{
+		return __popcnt64(block);
+	}
+	else
+	{
+		uint64_t result = 0;
+		while(block)
+		{
+			result += block & 1;
+			result >>= 1;
+		}
+
+		return result;
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -61,6 +81,14 @@ int main(int argc, char* argv[])
 	}
 	
 	std::cout << "Collecting stats on '" << argv[1] << "' to '" << argv[2] << "' (Top " << TOP_N << ")"<< std::endl;
+
+	// See if we can use the x64 popcnt instruction
+	int info[4];
+	__cpuid(info, 0x00000001);
+	if(info[2] & (1 << 23))
+	{
+		HAS_NATIVE_POPCOUNT = true;
+	}
 
 	// Open the fil efor read in binary mode
 	std::ifstream reader;
@@ -87,6 +115,8 @@ int main(int argc, char* argv[])
 	reader.seekg(0, std::ios::beg);
 	reader.read(bytes, len);
 
+	size_t setBits = 0;
+	size_t unsetBits = 0;
 	auto currentByte = 0;
 	while(currentByte < len)
 	{
@@ -114,6 +144,9 @@ int main(int argc, char* argv[])
 		if(blockByteCount == 8)
 		{
 			// Block level analysis
+			auto bits = popcnt(block);
+			setBits += bits;
+			unsetBits += 64 - bits;
 			blockCounter->add(block);
 			block = blockByteCount = 0;
 		}
@@ -121,6 +154,9 @@ int main(int argc, char* argv[])
 		hasParentByte = true;
 		parentByte = byte;
 	}
+
+	std::cout << "Set Bits: " << setBits << std::endl;
+	std::cout << "Unset Bits: " << unsetBits << std::endl;
 
 	reader.close();
 	delete[] bytes;
@@ -165,11 +201,12 @@ void printTree(AVL* tree, std::ofstream& writer)
 		q->enqueue(e);
 	});
 
-	writer << "hex\tdec\tcount" << std::endl;
+	writer << "hex\tdec\tcount\tones\tzeroes" << std::endl;
 	for(auto i = 0; i < TOP_N; i++)
 	{
 		auto e = q->dequeue();
-		writer << std::hex << e->first << "\t" << std::dec << e->first << "\t" << e->second << std::endl;
+		auto ones = popcnt(e->first);
+		writer << std::hex << e->first << "\t" << std::dec << e->first << "\t" << e->second << "\t" << ones << "\t" << 64 - ones << std::endl;
 		if (q->isEmpty()) break;
 	}
 
