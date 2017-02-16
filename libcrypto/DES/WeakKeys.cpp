@@ -23,7 +23,6 @@
  */
 
 #include <cstdint>
-#include <iostream>
 
 #include "DES.h"
 

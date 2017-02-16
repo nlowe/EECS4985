@@ -42,6 +42,8 @@ namespace libcrypto
 		{
 			Action Action;
 			uint64_t RoundKeys[16];
+			uint64_t* blocks;
+			size_t blockCount;
 		} Context;
 
 		/**
@@ -57,31 +59,6 @@ namespace libcrypto
 				S5[extract6(in, 6)] |
 				S6[extract6(in, 7)] |
 				S7[extract6(in, 8)];
-		}
-
-		/**
-		* Initialize the DES Context using the specified key
-		*/
-		Context* init(uint64_t key, libcrypto::Action action)
-		{
-			auto ctx = new Context;
-			ctx->Action = action;
-			
-			// Initialize the key
-			//   1. Compress and Permute the key into 56 bits
-			//   2. Split the key into two 28 bit halves
-			uint64_t keyLeft, keyRight;
-			split56(KeyPC64To56(key), keyLeft, keyRight);
-
-			for(auto i = 0; i < 16; i++)
-			{
-				rotL28(keyLeft, RotationSchedule[i]);
-				rotL28(keyRight, RotationSchedule[i]);
-
-				ctx->RoundKeys[action == ENCRYPT ? i : 15-i] = KeyPC56To48(join56(keyLeft, keyRight));
-			}
-
-			return ctx;
 		}
 
 		/**
@@ -127,6 +104,9 @@ namespace libcrypto
 			return FinalBlockPermutation(finalBlock);
 		}
 
+		/**
+		 * Check the key against known weak, semi-weak, and potentially weak keys
+		 */
 		int __check_key_internal(uint64_t key)
 		{
 			auto strength = CheckKey(key);
@@ -167,6 +147,9 @@ namespace libcrypto
 			return SUCCESS;
 		}
 
+		/**
+		 * Check the size to ensure it is a multiple of 8 bytes
+		 */
 		inline bool checkSize(size_t len)
 		{
 			if(len % 8 != 0)
@@ -178,102 +161,138 @@ namespace libcrypto
 			return true;
 		}
 
-		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key)
+		/**
+		 * Initialize the DES Context using the specified key
+		 */
+		Context* init(uint64_t key, char* data, size_t len, libcrypto::Action action, int& result)
 		{
-			if (!checkSize(len)) return ERR_SIZE;
-
-			auto keyCheck = __check_key_internal(key);
-			if (keyCheck != SUCCESS) return keyCheck;
-
-			auto ctx = init(key, ENCRYPT);
-			auto blocks = reinterpret_cast<uint64_t*>(data);
-			auto blockCount = len / 8;
-
-			size_t i = 0;
-			while(i < blockCount)
+			// Check for valid input sizes
+			if (!checkSize(len))
 			{
-				auto block = _byteswap_uint64(blocks[i]);
-				auto encrypted = TransformBlock(ctx, block);
-				blocks[i++] = _byteswap_uint64(encrypted);
+				result = ERR_SIZE;
+				return nullptr;
 			}
 
+			// Check the key strength (if enabled at compilation time)
+			auto keyCheck = __check_key_internal(key);
+			if (keyCheck != SUCCESS)
+			{
+				result = keyCheck;
+				return nullptr;
+			}
+
+			auto ctx = new Context;
+			ctx->Action = action;
+
+			// Initialize the key
+			//   1. Compress and Permute the key into 56 bits
+			//   2. Split the key into two 28 bit halves
+			uint64_t keyLeft, keyRight;
+			split56(KeyPC64To56(key), keyLeft, keyRight);
+
+			for(auto i = 0; i < 16; i++)
+			{
+				rotL28(keyLeft, RotationSchedule[i]);
+				rotL28(keyRight, RotationSchedule[i]);
+
+				ctx->RoundKeys[action == ENCRYPT ? i : 15-i] = KeyPC56To48(join56(keyLeft, keyRight));
+			}
+
+			ctx->blocks = reinterpret_cast<uint64_t*>(data);
+			ctx->blockCount = len / 8;
+
+			result = SUCCESS;
+			return ctx;
+		}
+
+		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key)
+		{
+			// Initialize the crypto context
+			int initStatus;
+			auto ctx = init(key, data, len, ENCRYPT, initStatus);
+			if (initStatus != SUCCESS) return initStatus;
+
+			// Encrypt all the things
+			size_t i = 0;
+			while(i < ctx->blockCount)
+			{
+				auto block = _byteswap_uint64(ctx->blocks[i]);
+				auto encrypted = TransformBlock(ctx, block);
+				ctx->blocks[i++] = _byteswap_uint64(encrypted);
+			}
+
+			// Free the crypto context and return success
 			delete ctx;
 			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, uint64_t key, uint64_t iv)
 		{
-			if (!checkSize(len)) return ERR_SIZE;
-
-			auto keyCheck = __check_key_internal(key);
-			if (keyCheck != SUCCESS) return keyCheck;
-
-			auto ctx = init(key, ENCRYPT);
-			auto blocks = reinterpret_cast<uint64_t*>(data);
-			auto blockCount = len / 8;
+			// Initialize the crypto context
+			int initStatus;
+			auto ctx = init(key, data, len, ENCRYPT, initStatus);
+			if (initStatus != SUCCESS) return initStatus;
 
 			auto previousBlock = iv;
 
+			// Encrypt all the things
 			size_t i = 0;
-			while(i < blockCount)
+			while(i < ctx->blockCount)
 			{
-				auto block = _byteswap_uint64(blocks[i]);
+				auto block = _byteswap_uint64(ctx->blocks[i]);
 				block ^= previousBlock;
 				auto encrypted = TransformBlock(ctx, block);
 				previousBlock = encrypted;
-				blocks[i++] = _byteswap_uint64(encrypted);
+				ctx->blocks[i++] = _byteswap_uint64(encrypted);
 			}
 
+			// Free the crypto context and return success
 			delete ctx;
 			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, uint64_t key)
 		{
-			if (!checkSize(len)) return ERR_SIZE;
+			// Initialize the crypto context
+			int initStatus;
+			auto ctx = init(key, data, len, DECRYPT, initStatus);
+			if (initStatus != SUCCESS) return initStatus;
 
-			auto keyCheck = __check_key_internal(key);
-			if (keyCheck != SUCCESS) return keyCheck;
-
-			auto ctx = init(key, DECRYPT);
-			auto blocks = reinterpret_cast<uint64_t*>(data);
-			auto blockCount = len / 8;
-
+			// Decrypt all the things
 			size_t i = 0;
-			while(i < blockCount)
+			while(i < ctx->blockCount)
 			{
-				auto block = _byteswap_uint64(blocks[i]);
+				auto block = _byteswap_uint64(ctx->blocks[i]);
 				auto decrypted = TransformBlock(ctx, block);
-				blocks[i++] = _byteswap_uint64(decrypted);
+				ctx->blocks[i++] = _byteswap_uint64(decrypted);
 			}
 
+			// Free the crypto context and return success
 			delete ctx;
 			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, uint64_t key, uint64_t iv)
 		{
-			if (!checkSize(len)) return ERR_SIZE;
-
-			auto keyCheck = __check_key_internal(key);
-			if (keyCheck != SUCCESS) return keyCheck;
-
-			auto ctx = init(key, DECRYPT);
-			auto blocks = reinterpret_cast<uint64_t*>(data);
-			auto blockCount = len / 8;
+			// Initialize the crypto context
+			int initStatus;
+			auto ctx = init(key, data, len, DECRYPT, initStatus);
+			if (initStatus != SUCCESS) return initStatus;
 
 			auto previousBlock = iv;
 
+			// Decrypt all the things
 			size_t i = 0;
-			while(i < blockCount)
+			while(i < ctx->blockCount)
 			{
-				auto block = _byteswap_uint64(blocks[i]);
+				auto block = _byteswap_uint64(ctx->blocks[i]);
 				auto decrypted = TransformBlock(ctx, block);
 				decrypted ^= previousBlock;
 				previousBlock = block;
-				blocks[i++] = _byteswap_uint64(decrypted);
+				ctx->blocks[i++] = _byteswap_uint64(decrypted);
 			}
 
+			// Free the crypto context and return success
 			delete ctx;
 			return SUCCESS;
 		}

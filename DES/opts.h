@@ -111,6 +111,11 @@ public:
 		else if(key.length() == 10)
 		{
 			// ASCII w/ space, because you totally need an extra set of quotes...
+			// Fun Fact: cmd.exe does not recognize arguments surrounded with single quotes as
+			//           a single argument (unlike most other shells). I still believe that this
+			//           is a user problem and Microsoft should either update their shell, or users
+			//           should learn how to provide arguments that contain spaces...but I digress
+			// Note: they got it right with powershell, but we still have to support cmd.exe
 			Key |= charToUnsigned64(argv[2][1]) << 56;
 			Key |= charToUnsigned64(argv[2][2]) << 48;
 			Key |= charToUnsigned64(argv[2][3]) << 40;
@@ -139,6 +144,8 @@ public:
 			Mode = libcrypto::Mode::CBC;
 			IV.SetValue(DEFAULT_IV);
 #if !defined(ALLOW_CBC)
+			// ECB Isn't allowed by default for this project. Since it's done, allow users
+			// to override this behavior at compile time by providing an extra define flag
 			std::cerr << "CBC is disabled for this project\n";
 			Errors = true;
 			return;

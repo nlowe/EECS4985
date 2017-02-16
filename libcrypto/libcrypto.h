@@ -28,6 +28,9 @@
 
 namespace libcrypto
 {
+	/**
+	 * The mode of operation for ciphers
+	 */
 	enum Mode
 	{
 		ECB,
@@ -35,6 +38,9 @@ namespace libcrypto
 		UNKNOWN_MODE
 	};
 
+	/**
+	 * The action to perform on the specified buffer
+	 */
 	enum Action
 	{
 		ENCRYPT,
@@ -42,6 +48,9 @@ namespace libcrypto
 		UNKNOWN_ACTION
 	};
 
+	/**
+	 * Create a random 32-bit integer
+	 */
 	inline uint64_t Random32()
 	{
 		std::random_device rd;
@@ -51,6 +60,9 @@ namespace libcrypto
 		return half(gen) | 0ull;
 	}
 
+	/**
+	 * Create a random 64-bit integer
+	 */
 	inline uint64_t Random64()
 	{
 		std::random_device rd;

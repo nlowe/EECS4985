@@ -18,6 +18,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
+ * fstats.cpp - a small program for collecting binary statistics on files
  */
 
 #include "stdafx.h"
@@ -33,10 +35,9 @@ void printElements(size_t* counter, size_t size, std::ofstream& writer);
 void printTree(AVL* tree, std::ofstream& writer);
 int printStats(std::string prefix);
 
-// Can't use #define in array size decl's?
-const auto NUM_SINGLE_BYTES = 256;
+#define NUM_SINGLE_BYTES 256
 
-/** An AVL Tree for counting individual bytes */
+/** An array for counting individual bytes */
 size_t* singleByteCount = nullptr;
 /** An AVL Tree for counting digraphs */
 AVL* digraphCount = new AVL();
@@ -48,10 +49,14 @@ AVL* blockCounter = new AVL();
 size_t TOP_N = 256;
 auto HAS_NATIVE_POPCOUNT = false;
 
+/** 
+ * Count the number of set bits in the specified block
+ */
 inline uint64_t popcnt(uint64_t block)
 {
 	if(HAS_NATIVE_POPCOUNT)
 	{
+		// If the cpu supports this instruction, just call it directly
 		return __popcnt64(block);
 	}
 	else
@@ -90,7 +95,7 @@ int main(int argc, char* argv[])
 		HAS_NATIVE_POPCOUNT = true;
 	}
 
-	// Open the fil efor read in binary mode
+	// Open the file for read in binary mode
 	std::ifstream reader;
 	reader.open(argv[1], std::ios::binary | std::ios::ate | std::ios::in);
 

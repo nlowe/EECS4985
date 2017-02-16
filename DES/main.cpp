@@ -29,7 +29,6 @@
 #include "../libcrypto/DES/DES.h"
 #include <iostream>
 #include <fstream>
-#include <ctime>
 #include <chrono>
 
 // Forward-declare so main is at the top as per project spec
@@ -43,6 +42,7 @@ int main(int argc, char* argv[])
 	// Parse Options
 	Options opts(argc, argv);
 
+	// Parse errors?
 	if(opts.Errors)
 	{
 		printHelp();
@@ -84,6 +84,7 @@ int main(int argc, char* argv[])
 
 	if(opts.Action == libcrypto::Action::ENCRYPT)
 	{
+		// Create the first block containing the length of the file for padding purposes
 		auto headerBlock = libcrypto::Random32() << 32 | len;
 		auto needsPadding = len % 8 != 0;
 		auto buffSize = len + 8 + (needsPadding ? 8 - (len % 8) : 0);
@@ -92,16 +93,19 @@ int main(int argc, char* argv[])
 		// Include the length of the file so we can determine how much padding we used when decrypting
 		libcrypto::buffStuff64(buff, 0, headerBlock);
 
+		// If we need padding, fill the last block with random data (it will be overwritten when we read the file)
 		if(needsPadding)
 		{
 			auto padding = libcrypto::Random64();
 			libcrypto::buffStuff64(buff, len / 8, padding);
 		}
 
+		// Record the start time and read the file
 		auto ioStart = std::chrono::high_resolution_clock::now();
 		reader.read(buff + 8, len);
 		reader.close();
 
+		// Hand off the buffer to the crypto library and record the runtime
 		auto start = std::chrono::high_resolution_clock::now();
 		int result;
 		if(opts.Mode == libcrypto::Mode::ECB)
@@ -115,17 +119,20 @@ int main(int argc, char* argv[])
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double, std::milli> duration = end - start;
 
+		// If encryption was a success, write the buffer to the output file
 		if(result == libcrypto::SUCCESS)
 		{
 			writer.write(buff, buffSize);
 		}
 		writer.close();
 
+		// Clean up
 		delete[] buff;
 		auto ioEnd = std::chrono::high_resolution_clock::now();
 
 		std::chrono::duration<double, std::milli> ioTime = ioEnd - ioStart - duration;
 
+		// Tell the user what happened
 		if(result != libcrypto::SUCCESS)
 		{
 			std::cerr << "DES Failed with result " << result << std::endl;
@@ -137,6 +144,7 @@ int main(int argc, char* argv[])
 	}
 	else if(opts.Action == libcrypto::Action::DECRYPT)
 	{
+		// Valid files are a multiple of 8 bytes
 		if(len % 8 != 0)
 		{
 			std::cerr << "Input file not a multiple of 8 bytes. The file is corrupt, not complete, or is not a DES Encrypted file" << std::endl;
@@ -144,11 +152,13 @@ int main(int argc, char* argv[])
 			return -1;
 		}
 
+		// Record the start time and read the file
 		auto ioStart = std::chrono::high_resolution_clock::now();
 		buff = new char[len];
 		reader.read(buff, len);
 		reader.close();
 
+		// Hand off the buffer to the crypto library and record the runtime
 		auto start = std::chrono::high_resolution_clock::now();
 		int result;
 		if(opts.Mode == libcrypto::Mode::ECB)
@@ -162,8 +172,10 @@ int main(int argc, char* argv[])
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double, std::milli> duration = end - start;
 
+		// Read the original length from the decrypted file
 		auto originalLength = _byteswap_uint64(reinterpret_cast<uint64_t*>(buff)[0]) & MASK32;
 
+		// If we didn't decrypt the file successfully, warn the user
 		if(originalLength > MASK31)
 		{
 			std::cerr << "Decrypted length too large. The file is corrupted or is not a DES file" << std::endl;
@@ -173,16 +185,20 @@ int main(int argc, char* argv[])
 			return -1;
 		}
 
+		// If we decrypted the file successfully, write the buffer (excluding the header and padding)
 		if(result == libcrypto::SUCCESS)
 		{
 			writer.write(buff + 8, originalLength);
 		}
 		writer.close();
+		
+		// Cleanup
 		delete[] buff;
 		auto ioEnd = std::chrono::high_resolution_clock::now();
 
 		std::chrono::duration<double, std::milli> ioTime = ioEnd - ioStart - duration;
 
+		// Tell the user what happened
 		if(result != libcrypto::SUCCESS)
 		{
 			std::cerr << "DES Failed with result " << result << std::endl;
@@ -198,6 +214,9 @@ int main(int argc, char* argv[])
 	}
 }
 
+/**
+ * Prints the syntax and help for the program
+ */
 void printHelp()
 {
 	std::cout << "DES <action> <key> <mode> <in> <out>" << std::endl << std::endl;
