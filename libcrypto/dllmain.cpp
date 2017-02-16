@@ -22,12 +22,17 @@
  * dllmain.cpp - Defines the entry point for the DLL application.
  */
 #include <windows.h>
+#include <iostream>
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
 					 )
 {
+#if defined(_DEBUG)
+	std::cerr << "WARNING: You are using a debug build of libcrypto. Algorithm performance WILL be degraded!" << std::endl;
+#endif
+
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
