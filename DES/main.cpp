@@ -114,7 +114,15 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			result = libcrypto::des::Encrypt(buff, buffSize, opts.Key, opts.IV.GetValue());
+			// Create a random IV, encrypt it, and write it to the file
+			auto IV = libcrypto::Random64();
+			char ivbuff[8]{0};
+			libcrypto::buffStuff64(ivbuff, 0, IV);
+			libcrypto::des::Encrypt(ivbuff, 8, opts.Key);
+			writer.write(ivbuff, 8);
+
+			// Encrypt using our IV
+			result = libcrypto::des::Encrypt(buff, buffSize, opts.Key, IV);
 		}
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double, std::milli> duration = end - start;
@@ -167,7 +175,16 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-			result = libcrypto::des::Decrypt(buff, len, opts.Key, opts.IV.GetValue());
+			// Decrypt the IV
+			libcrypto::des::Decrypt(buff, 8, opts.Key);
+
+			auto IV = _byteswap_uint64(reinterpret_cast<uint64_t*>(buff)[0]);
+
+			buff += 8;
+			len -= 8;
+
+			// Decrypt the rest of the file using the decrypted IV
+			result = libcrypto::des::Decrypt(buff, len, opts.Key, IV);
 		}
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double, std::milli> duration = end - start;
@@ -193,6 +210,7 @@ int main(int argc, char* argv[])
 		writer.close();
 		
 		// Cleanup
+		if (opts.Mode == libcrypto::Mode::CBC) buff -= 8;
 		delete[] buff;
 		auto ioEnd = std::chrono::high_resolution_clock::now();
 

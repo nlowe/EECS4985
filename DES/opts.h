@@ -32,12 +32,6 @@
 #include "../libcrypto/Util.h"
 
 /**
- * The project spec does not specify a means for using a different IV, only that this one
- * should be used. I guess recompile with a different IV if you need a different one
- */
-#define DEFAULT_IV 0xFB3C718924605AED
-
-/**
  * A class for parsing command-line options
  */
 class Options
@@ -54,9 +48,6 @@ public:
 	std::string Input;
 	/** The path to the output file */
 	std::string Output;
-
-	/** The initialization vector to use in CBC Mode. Not specified for ECB mode */
-	Optional<uint64_t> IV;
 
 	/** Whether or not errors were encountered */
 	bool Errors = false;
@@ -142,14 +133,6 @@ public:
 		else if(mode == "cbc")
 		{
 			Mode = libcrypto::Mode::CBC;
-			IV.SetValue(DEFAULT_IV);
-#if !defined(ALLOW_CBC)
-			// ECB Isn't allowed by default for this project. Since it's done, allow users
-			// to override this behavior at compile time by providing an extra define flag
-			std::cerr << "CBC is disabled for this project\n";
-			Errors = true;
-			return;
-#endif
 		}
 		else
 		{

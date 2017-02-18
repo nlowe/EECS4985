@@ -39,7 +39,6 @@ Task("Build")
         .WithProperty(weakKeyProp, "1")
         .WithProperty(semiWeakKeyProp, "1")
         .WithProperty(possiblyWeakKeyProp, "1")
-        .WithProperty("ALLOW_CBC", Argument("AllowCBC", true) ? "1" : "")
     );
 });
 
