@@ -163,10 +163,57 @@ Task("Test-CanDecryptProfessorFile")
     }
 });
 
+Task("Test-PaddingEdgeCase")
+    .IsDependentOn("Build")
+    .Does(() => 
+{
+    var encryptedFile = "./" + (Guid.NewGuid()).ToString() + ".des";
+    var decryptedFile = "./" + (Guid.NewGuid()).ToString() + ".desdec";
+
+    var encryptExitCode = StartProcess("./x64/" + configuration + "/DES.exe", new ProcessSettings ()
+        .WithArguments(args => args
+            .Append("-e")
+            .AppendQuoted("Pa$$w0rd")
+            .Append("ECB")
+            .AppendQuoted("./Test Files/alphabet.txt")
+            .AppendQuoted(encryptedFile)
+        )
+    );
+
+    if(encryptExitCode != 0) throw new Exception("Encryption failed with exit code " + encryptExitCode);
+
+    var decryptExitCode = StartProcess("./x64/" + configuration + "/DES.exe", new ProcessSettings ()
+        .WithArguments(args => args
+            .Append("-d")
+            .AppendQuoted("Pa$$w0rd")
+            .Append("ECB")
+            .AppendQuoted(encryptedFile)
+            .AppendQuoted(decryptedFile)
+        )
+    );
+
+    DeleteFile(encryptedFile);
+    if(decryptExitCode != 0) throw new Exception("Decryption failed with exit code " + decryptExitCode);
+
+    var original = CalculateFileHash("./Test Files/alphabet.txt").ToHex();
+    var decrypted = CalculateFileHash(decryptedFile).ToHex();
+
+    DeleteFile(decryptedFile);
+
+    Information("Original Plaintext:  " + original);
+    Information("Decrypted Plaintext: " + decrypted);
+
+    if(original != decrypted)
+    {
+        throw new Exception("Decrypted ciphertext is different from original plaintext");
+    }
+});
+
 Task("Test")
     .IsDependentOn("Test-ECB")
     .IsDependentOn("Test-CBC")
-    .IsDependentOn("Test-CanDecryptProfessorFile");
+    .IsDependentOn("Test-CanDecryptProfessorFile")
+	.IsDependentOn("Test-PaddingEdgeCase");
 
 Task("Concat")
     .Does(() =>
