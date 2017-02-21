@@ -193,10 +193,11 @@ int main(int argc, char* argv[])
 		auto originalLength = _byteswap_uint64(reinterpret_cast<uint64_t*>(buff)[0]) & MASK32;
 
 		// If we didn't decrypt the file successfully, warn the user
-		if(originalLength > MASK31)
+		if(originalLength > MASK31 || originalLength > len)
 		{
 			std::cerr << "Decrypted length too large. The file is corrupted or is not a DES file" << std::endl;
 			writer.close();
+			if (opts.Mode == libcrypto::Mode::CBC) buff -= 8;
 			delete[] buff;
 
 			return -1;
