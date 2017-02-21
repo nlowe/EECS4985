@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 		if(needsPadding)
 		{
 			auto padding = libcrypto::Random64();
-			libcrypto::buffStuff64(buff, len / 8, padding);
+			libcrypto::buffStuff64(buff, buffSize - 8, padding);
 		}
 
 		// Record the start time and read the file
