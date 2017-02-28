@@ -95,4 +95,5 @@ namespace libcrypto
 	const int ERR_BAD_OUTPUT = -6;
 	const int ERR_KEY_TOO_WEAK = -7;
 	const int ERR_SIZE = -8;
+	const int ERR_NOT_IMPLEMENTED = -9;
 }

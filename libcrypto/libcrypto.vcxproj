@@ -194,6 +194,12 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AES\AES.h" />
+    <ClInclude Include="AES\Boxes.h" />
+    <ClInclude Include="AES\GaloisMul.h" />
+    <ClInclude Include="AES\KeySchedule.h" />
+    <ClInclude Include="AES\Shared.h" />
+    <ClInclude Include="AES\Types.h" />
     <ClInclude Include="DES\Boxes.h" />
     <ClInclude Include="DES\DES.h" />
     <ClInclude Include="DES\Math.h" />
@@ -204,6 +210,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AES\AES.cpp" />
+    <ClCompile Include="AES\Shared.cpp" />
     <ClCompile Include="DES\DES.cpp" />
     <ClCompile Include="DES\WeakKeys.cpp" />
     <ClCompile Include="dllmain.cpp">
