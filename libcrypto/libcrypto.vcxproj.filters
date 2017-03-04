@@ -68,10 +68,13 @@
     <ClCompile Include="DES\WeakKeys.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AES\AES.cpp">
+    <ClCompile Include="AES\AES128.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AES\Shared.cpp">
+    <ClCompile Include="AES\AES192.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AES\AES256.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

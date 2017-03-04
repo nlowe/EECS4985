@@ -26,6 +26,11 @@
 #include "Types.h"
 #include <cstdint>
 
+#define AES_BLOCK_SIZE 16
+#define AES_ROUNDS_128 10
+#define AES_ROUNDS_192 12
+#define AES_ROUNDS_256 14
+
 namespace libcrypto
 {
 	namespace aes
@@ -34,10 +39,10 @@ namespace libcrypto
 		{
 			aes_block_t block;
 
-			block[0]  = buff[offset];     block[1]  = buff[offset + 4]; block[2]  = buff[offset + 8];  block[3]  = buff[offset + 12];
-			block[4]  = buff[offset + 1]; block[5]  = buff[offset + 5]; block[6]  = buff[offset + 9];  block[7]  = buff[offset + 13];
-			block[8]  = buff[offset + 2]; block[9]  = buff[offset + 6]; block[10] = buff[offset + 10]; block[11] = buff[offset + 14];
-			block[12] = buff[offset + 3]; block[13] = buff[offset + 7]; block[14] = buff[offset + 11]; block[14] = buff[offset + 15];
+			block[0][0] = buff[offset];     block[0][1] = buff[offset + 4]; block[0][2] = buff[offset + 8];  block[0][3] = buff[offset + 12];
+			block[1][0] = buff[offset + 1]; block[1][1] = buff[offset + 5]; block[1][2] = buff[offset + 9];  block[1][3] = buff[offset + 13];
+			block[2][0] = buff[offset + 2]; block[2][1] = buff[offset + 6]; block[2][2] = buff[offset + 10]; block[2][3] = buff[offset + 14];
+			block[3][0] = buff[offset + 3]; block[3][1] = buff[offset + 7]; block[3][2] = buff[offset + 11]; block[3][3] = buff[offset + 15];
 
 			return block;
 		}
