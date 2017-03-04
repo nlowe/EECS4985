@@ -25,6 +25,7 @@
 #include "KeySchedule.h"
 #include "../libcrypto.h"
 #include "Shared.h"
+#include <iostream>
 
 namespace libcrypto
 {
@@ -51,13 +52,15 @@ namespace libcrypto
 			ctx->Action = action;
 			ctx->BlockCount = len / AES_BLOCK_SIZE;
 
-			ctx->RoundKeys = BuildSchedule(action, key);
+			ctx->RoundKeys = BuildSchedule(key);
 			return ctx;
 		}
 
 		inline void transform_block_128(aes_block_t& block, Context* ctx)
 		{
-			for(auto i = 0; i < AES_ROUNDS_128 - 1; i++)
+			block ^= ctx->RoundKeys[0];
+
+			for(auto i = 1; i < AES_ROUNDS_128; i++)
 			{
 				SubBytes(block);
 				ShiftRows(block);
@@ -67,22 +70,24 @@ namespace libcrypto
 
 			SubBytes(block);
 			ShiftRows(block);
-			block ^= ctx->RoundKeys[AES_ROUNDS_128 - 1];
+			block ^= ctx->RoundKeys[AES_ROUNDS_128];
 		}
 
 		inline void inverse_transform_block_128(aes_block_t& block, Context* ctx)
 		{
-			InvSubBytes(block);
+			block ^= ctx->RoundKeys[10];
 			InvShiftRows(block);
-			block ^= ctx->RoundKeys[0];
+			InvSubBytes(block);
 
-			for(auto i = 1; i < AES_ROUNDS_128; i++)
+			for(auto i = 9; i > 0; i--)
 			{
-				InvSubBytes(block);
-				InvShiftRows(block);
-				InvMixColumns(block);
 				block ^= ctx->RoundKeys[i];
+				InvMixColumns(block);
+				InvShiftRows(block);
+				InvSubBytes(block);
 			}
+
+			block ^= ctx->RoundKeys[0];
 		}
 
 		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, aes_key_128_t key)
@@ -99,7 +104,7 @@ namespace libcrypto
 			}
 
 			delete ctx;
-			return ERR_NOT_IMPLEMENTED;
+			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, aes_key_128_t key, aes_block_t IV)
@@ -119,7 +124,7 @@ namespace libcrypto
 			}
 
 			delete ctx;
-			return ERR_NOT_IMPLEMENTED;
+			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, aes_key_128_t key)
@@ -136,7 +141,7 @@ namespace libcrypto
 			}
 
 			delete ctx;
-			return ERR_NOT_IMPLEMENTED;
+			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, aes_key_128_t key, aes_block_t IV)
@@ -158,7 +163,7 @@ namespace libcrypto
 			}
 
 			delete ctx;
-			return ERR_NOT_IMPLEMENTED;
+			return SUCCESS;
 		}
 	}
 }

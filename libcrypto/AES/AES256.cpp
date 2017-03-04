@@ -99,7 +99,7 @@ namespace libcrypto
 			}
 
 			delete ctx;
-			return ERR_NOT_IMPLEMENTED;
+			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, aes_key_256_t key, aes_block_t IV)
@@ -119,7 +119,7 @@ namespace libcrypto
 			}
 
 			delete ctx;
-			return ERR_NOT_IMPLEMENTED;
+			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, aes_key_256_t key)
@@ -136,7 +136,7 @@ namespace libcrypto
 			}
 
 			delete ctx;
-			return ERR_NOT_IMPLEMENTED;
+			return SUCCESS;
 		}
 
 		LIBCRYPTO_PUB int Decrypt(char* data, size_t len, aes_key_256_t key, aes_block_t IV)
@@ -158,7 +158,7 @@ namespace libcrypto
 			}
 
 			delete ctx;
-			return ERR_NOT_IMPLEMENTED;
+			return SUCCESS;
 		}
 	}
 }

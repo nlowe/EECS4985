@@ -3,26 +3,29 @@
 
 #include "stdafx.h"
 #include "../libcrypto/AES/AES.h"
-#include <iostream>
 #include "../libcrypto/AES/KeySchedule.h"
-
-void print_block(aes_block_t block)
-{
-	std::cout << std::hex << +block[0][0] << " " << +block[0][1] << " " << +block[0][2] << " " << +block[0][3] << " " << std::endl;
-	std::cout << std::hex << +block[1][0] << " " << +block[1][1] << " " << +block[1][2] << " " << +block[1][3] << " " << std::endl;
-	std::cout << std::hex << +block[2][0] << " " << +block[2][1] << " " << +block[2][2] << " " << +block[2][3] << " " << std::endl;
-	std::cout << std::hex << +block[3][0] << " " << +block[3][1] << " " << +block[3][2] << " " << +block[3][3] << " " << std::endl;
-}
+#include <iostream>
 
 int main()
 {
-	auto key = libcrypto::aes::make_block("SOME 128 BIT KEY", 0);
+	uint8_t rawKey[16] = {
+		0x0f, 0x15, 0x71, 0xc9, 0x47, 0xd9, 0xe8, 0x59, 0x0c, 0xb7, 0xad, 0xd6, 0xaf, 0x7f, 0x67, 0x98
+	};
+	auto key = libcrypto::aes::make_block(reinterpret_cast<char*>(rawKey), 0);
 
-	auto schedule = libcrypto::aes::BuildSchedule(libcrypto::Action::ENCRYPT, key);
+//	auto schedule = libcrypto::aes::BuildSchedule(key);
+//	for(auto i = 0; i <= AES_ROUNDS_128; i++)
+//	{
+//		std::cout << "KeySchedule[" << i << "]:" << std::endl;
+//		libcrypto::aes::print_block(schedule[i]);
+//	}
 
-	print_block(schedule[0]);
-	std::cout << "------" << std::endl;
-	print_block(schedule[1]);
+	char data[16] = { 0 };
+
+	libcrypto::aes::Decrypt(data, 16, key);
+	
+	auto block = libcrypto::aes::make_block(data, 0);
+	libcrypto::aes::print_block(block);
 
     return 0;
 }

@@ -108,56 +108,62 @@ namespace libcrypto
 
 		inline void MixColumns(aes_block_t& block)
 		{
+			aes_block_t tmp;
+
 			// Column 1
-			block[0][0] = gfmul2[block[0][0]] ^ gfmul3[block[1][0]] ^        block[2][0]  ^        block[3][0];
-			block[1][0] =        block[0][0]  ^ gfmul2[block[1][0]] ^ gfmul3[block[2][0]] ^        block[3][0];
-			block[2][0] =        block[0][0]  ^        block[1][0]  ^ gfmul2[block[2][0]] ^ gfmul3[block[3][0]];
-			block[3][0] = gfmul3[block[0][0]] ^        block[1][0]  ^        block[2][0]  ^ gfmul2[block[3][0]];
+			tmp[0][0] = gfmul2[block[0][0]] ^ gfmul3[block[1][0]] ^        block[2][0]  ^        block[3][0];
+			tmp[1][0] =        block[0][0]  ^ gfmul2[block[1][0]] ^ gfmul3[block[2][0]] ^        block[3][0];
+			tmp[2][0] =        block[0][0]  ^        block[1][0]  ^ gfmul2[block[2][0]] ^ gfmul3[block[3][0]];
+			tmp[3][0] = gfmul3[block[0][0]] ^        block[1][0]  ^        block[2][0]  ^ gfmul2[block[3][0]];
 
 			// Column 2
-			block[0][1] = gfmul2[block[0][1]] ^ gfmul3[block[1][1]] ^        block[2][1]  ^        block[3][1];
-			block[1][1] =        block[0][1]  ^ gfmul2[block[1][1]] ^ gfmul3[block[2][1]] ^        block[3][1];
-			block[2][1] =        block[0][1]  ^        block[1][1]  ^ gfmul2[block[2][1]] ^ gfmul3[block[3][1]];
-			block[3][1] = gfmul3[block[0][1]] ^        block[1][1]  ^        block[2][1]  ^ gfmul2[block[3][1]];
+			tmp[0][1] = gfmul2[block[0][1]] ^ gfmul3[block[1][1]] ^        block[2][1]  ^        block[3][1];
+			tmp[1][1] =        block[0][1]  ^ gfmul2[block[1][1]] ^ gfmul3[block[2][1]] ^        block[3][1];
+			tmp[2][1] =        block[0][1]  ^        block[1][1]  ^ gfmul2[block[2][1]] ^ gfmul3[block[3][1]];
+			tmp[3][1] = gfmul3[block[0][1]] ^        block[1][1]  ^        block[2][1]  ^ gfmul2[block[3][1]];
 
 			// Column 3
-			block[0][2] = gfmul2[block[0][2]] ^ gfmul3[block[1][2]] ^        block[2][2]  ^        block[3][2];
-			block[1][2] =        block[0][2]  ^ gfmul2[block[1][2]] ^ gfmul3[block[2][2]] ^        block[3][2];
-			block[2][2] =        block[0][2]  ^        block[1][2]  ^ gfmul2[block[2][2]] ^ gfmul3[block[3][2]];
-			block[3][2] = gfmul3[block[0][2]] ^        block[1][2]  ^        block[2][2]  ^ gfmul2[block[3][2]];
+			tmp[0][2] = gfmul2[block[0][2]] ^ gfmul3[block[1][2]] ^        block[2][2]  ^        block[3][2];
+			tmp[1][2] =        block[0][2]  ^ gfmul2[block[1][2]] ^ gfmul3[block[2][2]] ^        block[3][2];
+			tmp[2][2] =        block[0][2]  ^        block[1][2]  ^ gfmul2[block[2][2]] ^ gfmul3[block[3][2]];
+			tmp[3][2] = gfmul3[block[0][2]] ^        block[1][2]  ^        block[2][2]  ^ gfmul2[block[3][2]];
 
 			// Column 4
-			block[0][3] = gfmul2[block[0][3]] ^ gfmul3[block[1][3]] ^        block[2][3]  ^        block[3][3];
-			block[1][3] =        block[0][3]  ^ gfmul2[block[1][3]] ^ gfmul3[block[2][3]] ^        block[3][3];
-			block[2][3] =        block[0][3]  ^        block[1][3]  ^ gfmul2[block[2][3]] ^ gfmul3[block[3][3]];
-			block[3][3] = gfmul3[block[0][3]] ^        block[1][3]  ^        block[2][3]  ^ gfmul2[block[3][3]];
+			tmp[0][3] = gfmul2[block[0][3]] ^ gfmul3[block[1][3]] ^        block[2][3]  ^        block[3][3];
+			tmp[1][3] =        block[0][3]  ^ gfmul2[block[1][3]] ^ gfmul3[block[2][3]] ^        block[3][3];
+			tmp[2][3] =        block[0][3]  ^        block[1][3]  ^ gfmul2[block[2][3]] ^ gfmul3[block[3][3]];
+			tmp[3][3] = gfmul3[block[0][3]] ^        block[1][3]  ^        block[2][3]  ^ gfmul2[block[3][3]];
+
+			block = tmp;
 		}
 		
 		inline void InvMixColumns(aes_block_t& block)
 		{
+			aes_block_t tmp;
+
 			// Column 1
-			block[0][0] = gfmul14[block[0][0]] ^ gfmul11[block[1][0]] ^ gfmul13[block[2][0]] ^ gfmul09[block[3][0]];
-			block[1][0] = gfmul09[block[0][0]] ^ gfmul14[block[1][0]] ^ gfmul11[block[2][0]] ^ gfmul13[block[3][0]];
-			block[2][0] = gfmul13[block[0][0]] ^ gfmul09[block[1][0]] ^ gfmul14[block[2][0]] ^ gfmul11[block[3][0]];
-			block[3][0] = gfmul11[block[0][0]] ^ gfmul13[block[1][0]] ^ gfmul09[block[2][0]] ^ gfmul14[block[3][0]];
+			tmp[0][0] = gfmul14[block[0][0]] ^ gfmul11[block[1][0]] ^ gfmul13[block[2][0]] ^ gfmul09[block[3][0]];
+			tmp[1][0] = gfmul09[block[0][0]] ^ gfmul14[block[1][0]] ^ gfmul11[block[2][0]] ^ gfmul13[block[3][0]];
+			tmp[2][0] = gfmul13[block[0][0]] ^ gfmul09[block[1][0]] ^ gfmul14[block[2][0]] ^ gfmul11[block[3][0]];
+			tmp[3][0] = gfmul11[block[0][0]] ^ gfmul13[block[1][0]] ^ gfmul09[block[2][0]] ^ gfmul14[block[3][0]];
 
 			// Column 2
-			block[0][1] = gfmul14[block[0][1]] ^ gfmul11[block[1][1]] ^ gfmul13[block[2][1]] ^ gfmul09[block[3][1]];
-			block[1][1] = gfmul09[block[0][1]] ^ gfmul14[block[1][1]] ^ gfmul11[block[2][1]] ^ gfmul13[block[3][1]];
-			block[2][1] = gfmul13[block[0][1]] ^ gfmul09[block[1][1]] ^ gfmul14[block[2][1]] ^ gfmul11[block[3][1]];
-			block[3][1] = gfmul11[block[0][1]] ^ gfmul13[block[1][1]] ^ gfmul09[block[2][1]] ^ gfmul14[block[3][1]];
+			tmp[0][1] = gfmul14[block[0][1]] ^ gfmul11[block[1][1]] ^ gfmul13[block[2][1]] ^ gfmul09[block[3][1]];
+			tmp[1][1] = gfmul09[block[0][1]] ^ gfmul14[block[1][1]] ^ gfmul11[block[2][1]] ^ gfmul13[block[3][1]];
+			tmp[2][1] = gfmul13[block[0][1]] ^ gfmul09[block[1][1]] ^ gfmul14[block[2][1]] ^ gfmul11[block[3][1]];
+			tmp[3][1] = gfmul11[block[0][1]] ^ gfmul13[block[1][1]] ^ gfmul09[block[2][1]] ^ gfmul14[block[3][1]];
 
 			// Column 3
-			block[0][2] = gfmul14[block[0][2]] ^ gfmul11[block[1][2]] ^ gfmul13[block[2][2]] ^ gfmul09[block[3][2]];
-			block[1][2] = gfmul09[block[0][2]] ^ gfmul14[block[1][2]] ^ gfmul11[block[2][2]] ^ gfmul13[block[3][2]];
-			block[2][2] = gfmul13[block[0][2]] ^ gfmul09[block[1][2]] ^ gfmul14[block[2][2]] ^ gfmul11[block[3][2]];
-			block[3][2] = gfmul11[block[0][2]] ^ gfmul13[block[1][2]] ^ gfmul09[block[2][2]] ^ gfmul14[block[3][2]];
+			tmp[0][2] = gfmul14[block[0][2]] ^ gfmul11[block[1][2]] ^ gfmul13[block[2][2]] ^ gfmul09[block[3][2]];
+			tmp[1][2] = gfmul09[block[0][2]] ^ gfmul14[block[1][2]] ^ gfmul11[block[2][2]] ^ gfmul13[block[3][2]];
+			tmp[2][2] = gfmul13[block[0][2]] ^ gfmul09[block[1][2]] ^ gfmul14[block[2][2]] ^ gfmul11[block[3][2]];
+			tmp[3][2] = gfmul11[block[0][2]] ^ gfmul13[block[1][2]] ^ gfmul09[block[2][2]] ^ gfmul14[block[3][2]];
 
 			// Column 4
-			block[0][3] = gfmul14[block[0][3]] ^ gfmul11[block[1][3]] ^ gfmul13[block[2][3]] ^ gfmul09[block[3][3]];
-			block[1][3] = gfmul09[block[0][3]] ^ gfmul14[block[1][3]] ^ gfmul11[block[2][3]] ^ gfmul13[block[3][3]];
-			block[2][3] = gfmul13[block[0][3]] ^ gfmul09[block[1][3]] ^ gfmul14[block[2][3]] ^ gfmul11[block[3][3]];
-			block[3][3] = gfmul11[block[0][3]] ^ gfmul13[block[1][3]] ^ gfmul09[block[2][3]] ^ gfmul14[block[3][3]];
+			tmp[0][3] = gfmul14[block[0][3]] ^ gfmul11[block[1][3]] ^ gfmul13[block[2][3]] ^ gfmul09[block[3][3]];
+			tmp[1][3] = gfmul09[block[0][3]] ^ gfmul14[block[1][3]] ^ gfmul11[block[2][3]] ^ gfmul13[block[3][3]];
+			tmp[2][3] = gfmul13[block[0][3]] ^ gfmul09[block[1][3]] ^ gfmul14[block[2][3]] ^ gfmul11[block[3][3]];
+			tmp[3][3] = gfmul11[block[0][3]] ^ gfmul13[block[1][3]] ^ gfmul09[block[2][3]] ^ gfmul14[block[3][3]];
 		}
 	}
 }

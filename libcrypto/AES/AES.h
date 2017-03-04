@@ -24,7 +24,7 @@
 #pragma once
 #include "../export.h"
 #include "Types.h"
-#include <cstdint>
+#include <iomanip>
 
 #define AES_BLOCK_SIZE 16
 #define AES_ROUNDS_128 10
@@ -35,6 +35,14 @@ namespace libcrypto
 {
 	namespace aes
 	{
+		inline void print_block(aes_block_t& block)
+		{
+			printf("%02x %02x %02x %02x\n", block[0][0], block[0][1], block[0][2], block[0][3]);
+			printf("%02x %02x %02x %02x\n", block[1][0], block[1][1], block[1][2], block[1][3]);
+			printf("%02x %02x %02x %02x\n", block[2][0], block[2][1], block[2][2], block[2][3]);
+			printf("%02x %02x %02x %02x\n", block[3][0], block[3][1], block[3][2], block[3][3]);
+		}
+
 		inline aes_block_t make_block(char* buff, size_t offset)
 		{
 			aes_block_t block;
