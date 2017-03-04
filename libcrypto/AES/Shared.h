@@ -164,6 +164,8 @@ namespace libcrypto
 			tmp[1][3] = gfmul09[block[0][3]] ^ gfmul14[block[1][3]] ^ gfmul11[block[2][3]] ^ gfmul13[block[3][3]];
 			tmp[2][3] = gfmul13[block[0][3]] ^ gfmul09[block[1][3]] ^ gfmul14[block[2][3]] ^ gfmul11[block[3][3]];
 			tmp[3][3] = gfmul11[block[0][3]] ^ gfmul13[block[1][3]] ^ gfmul09[block[2][3]] ^ gfmul14[block[3][3]];
+
+			block = tmp;
 		}
 	}
 }
