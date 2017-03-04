@@ -35,7 +35,7 @@
     <ClCompile Include="ValidationTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AESValidationTests.cpp">
+    <ClCompile Include="AES128ValidationTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
