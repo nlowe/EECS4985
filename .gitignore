@@ -12,6 +12,8 @@ concat.cxx
 
 # Analysis
 *.tsv
+*.zip
+*.7z
 [Aa]nalysis/
 
 # Encrypted Files
@@ -19,6 +21,10 @@ concat.cxx
 *.desdec*
 *.ecbdes*
 *.cbcdes*
+*.aes*
+*.aesdec*
+*.ecbaes*
+*.cbcaes*
 
 # User-specific files
 *.suo

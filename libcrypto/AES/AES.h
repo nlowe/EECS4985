@@ -43,6 +43,14 @@ namespace libcrypto
 			printf("%02x %02x %02x %02x\n", block[3][0], block[3][1], block[3][2], block[3][3]);
 		}
 
+		inline void buffstuff(char* buff, size_t off, aes_block_t& block)
+		{
+			buff[off + 0] = block[0][0]; buff[off + 4] = block[0][1]; buff[off +  8] = block[0][2]; buff[off + 12] = block[0][3];
+			buff[off + 1] = block[1][0]; buff[off + 5] = block[1][1]; buff[off +  9] = block[1][2]; buff[off + 13] = block[1][3];
+			buff[off + 2] = block[2][0]; buff[off + 6] = block[2][1]; buff[off + 10] = block[2][2]; buff[off + 14] = block[2][3];
+			buff[off + 3] = block[3][0]; buff[off + 7] = block[3][1]; buff[off + 11] = block[3][2]; buff[off + 15] = block[3][3];
+		}
+
 		inline aes_block_t make_block(char* buff, size_t offset)
 		{
 			aes_block_t block;
@@ -53,6 +61,18 @@ namespace libcrypto
 			block[3][0] = buff[offset + 3]; block[3][1] = buff[offset + 7]; block[3][2] = buff[offset + 11]; block[3][3] = buff[offset + 15];
 
 			return block;
+		}
+
+		inline aes_block_t random_block()
+		{
+			aes_block_t result;
+
+			result[0][0] = rand() & 0xFF; result[0][1] = rand() & 0xFF; result[0][2] = rand() & 0xFF; result[0][3] = rand() & 0xFF;
+			result[1][0] = rand() & 0xFF; result[1][1] = rand() & 0xFF; result[1][2] = rand() & 0xFF; result[1][3] = rand() & 0xFF;
+			result[2][0] = rand() & 0xFF; result[2][1] = rand() & 0xFF; result[2][2] = rand() & 0xFF; result[2][3] = rand() & 0xFF;
+			result[3][0] = rand() & 0xFF; result[3][1] = rand() & 0xFF; result[3][2] = rand() & 0xFF; result[3][3] = rand() & 0xFF;
+			
+			return result;
 		}
 
 		/**

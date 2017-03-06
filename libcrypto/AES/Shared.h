@@ -30,14 +30,6 @@ namespace libcrypto
 {
 	namespace aes
 	{
-		inline void buffstuff(char* buff, size_t off, aes_block_t& block)
-		{
-			buff[off + 0] = block[0][0]; buff[off + 4] = block[0][1]; buff[off +  8] = block[0][2]; buff[off + 12] = block[0][3];
-			buff[off + 1] = block[1][0]; buff[off + 5] = block[1][1]; buff[off +  9] = block[1][2]; buff[off + 13] = block[1][3];
-			buff[off + 2] = block[2][0]; buff[off + 6] = block[2][1]; buff[off + 10] = block[2][2]; buff[off + 14] = block[2][3];
-			buff[off + 3] = block[3][0]; buff[off + 7] = block[3][1]; buff[off + 11] = block[3][2]; buff[off + 15] = block[3][3];
-		}
-
 		inline void SubBytes(aes_block_t& block)
 		{
 			block[0][0] = s[block[0][0]]; block[0][1] = s[block[0][1]]; block[0][2] = s[block[0][2]]; block[0][3] = s[block[0][3]];
