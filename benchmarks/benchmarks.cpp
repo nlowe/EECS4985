@@ -117,25 +117,114 @@ void benchmarkAES128()
 	std::cout << "bytes\tECB Encrypt\tECB Decrypt\tCBC Encrypt\tCBC Decrypt" << std::endl;
 	for(auto i = AES_MIN_SIZE; i <= AES_MAX_SIZE; i += AES_STEP_SIZE)
 	{
-		libcrypto::aes::aes_key_128_t key;
-		for(auto r = 0; r < 4; r++)
-		{
-			auto part = random();
-			for(auto c = 0; c < 4; c++)
-			{
-				key[r][c] = (part >> c) & 0xFF;
-			}
-		}
+		char keybuff[16]{ 0 };
+		char ivbuff[16]{ 0 };
 
-		libcrypto::aes::aes_block_t iv;
-		for(auto r = 0; r < 4; r++)
-		{
-			auto part = random();
-			for(auto c = 0; c < 4; c++)
-			{
-				iv[r][c] = (part >> c) & 0xFF;
-			}
-		}
+		fillbuff(random, keybuff, 16);
+		fillbuff(random, ivbuff, 16);
+
+		auto key = libcrypto::aes::make_block(keybuff, 0);
+		auto iv = libcrypto::aes::make_block(ivbuff, 0);
+
+		auto ecb_enc_start = std::chrono::high_resolution_clock::now();
+		libcrypto::aes::Encrypt(buff, i, key);
+		auto ecb_enc_end = std::chrono::high_resolution_clock::now();
+
+		auto ecb_dec_start = std::chrono::high_resolution_clock::now();
+		libcrypto::aes::Decrypt(buff, i, key);
+		auto ecb_dec_end = std::chrono::high_resolution_clock::now();
+
+		auto cbc_enc_start = std::chrono::high_resolution_clock::now();
+		libcrypto::aes::Encrypt(buff, i, key, iv);
+		auto cbc_enc_end = std::chrono::high_resolution_clock::now();
+
+		auto cbc_dec_start = std::chrono::high_resolution_clock::now();
+		libcrypto::aes::Decrypt(buff, i, key, iv);
+		auto cbc_dec_end = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<double, std::milli> ecb_enc = ecb_enc_end - ecb_enc_start;
+		std::chrono::duration<double, std::milli> ecb_dec = ecb_dec_end - ecb_dec_start;
+		std::chrono::duration<double, std::milli> cbc_enc = cbc_enc_end - cbc_enc_start;
+		std::chrono::duration<double, std::milli> cbc_dec = cbc_dec_end - cbc_dec_start;
+
+		std::cout << i << "\t" << ecb_enc.count() << "\t" << ecb_dec.count() << "\t" << cbc_enc.count() << "\t" << cbc_dec.count() << std::endl;
+	}
+
+	delete[] buff;
+}
+
+/** 
+* Benchmark AES with 192-bit keys (both ECB and CBC Mode)
+*/
+void benchmarkAES192()
+{
+	std::cout << std::endl << std::endl << "Benchmarking AES with 192-bit keys" << std::endl << "----------------" << std::endl;
+	std::cout << "Initializing data" << std::endl;
+	std::mt19937_64 random;
+	auto buff = new char[AES_MAX_SIZE];
+	fillbuff(random, buff, AES_MAX_SIZE);
+
+	std::cout << "bytes\tECB Encrypt\tECB Decrypt\tCBC Encrypt\tCBC Decrypt" << std::endl;
+	for(auto i = AES_MIN_SIZE; i <= AES_MAX_SIZE; i += AES_STEP_SIZE)
+	{
+		char keybuff[24]{ 0 };
+		char ivbuff[16]{ 0 };
+
+		fillbuff(random, keybuff, 24);
+		fillbuff(random, ivbuff, 16);
+
+		auto key = libcrypto::aes::make_key_192(keybuff);
+		auto iv = libcrypto::aes::make_block(ivbuff, 0);
+
+		auto ecb_enc_start = std::chrono::high_resolution_clock::now();
+		libcrypto::aes::Encrypt(buff, i, key);
+		auto ecb_enc_end = std::chrono::high_resolution_clock::now();
+
+		auto ecb_dec_start = std::chrono::high_resolution_clock::now();
+		libcrypto::aes::Decrypt(buff, i, key);
+		auto ecb_dec_end = std::chrono::high_resolution_clock::now();
+
+		auto cbc_enc_start = std::chrono::high_resolution_clock::now();
+		libcrypto::aes::Encrypt(buff, i, key, iv);
+		auto cbc_enc_end = std::chrono::high_resolution_clock::now();
+
+		auto cbc_dec_start = std::chrono::high_resolution_clock::now();
+		libcrypto::aes::Decrypt(buff, i, key, iv);
+		auto cbc_dec_end = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<double, std::milli> ecb_enc = ecb_enc_end - ecb_enc_start;
+		std::chrono::duration<double, std::milli> ecb_dec = ecb_dec_end - ecb_dec_start;
+		std::chrono::duration<double, std::milli> cbc_enc = cbc_enc_end - cbc_enc_start;
+		std::chrono::duration<double, std::milli> cbc_dec = cbc_dec_end - cbc_dec_start;
+
+		std::cout << i << "\t" << ecb_enc.count() << "\t" << ecb_dec.count() << "\t" << cbc_enc.count() << "\t" << cbc_dec.count() << std::endl;
+	}
+
+	delete[] buff;
+}
+
+/** 
+* Benchmark AES with 256-bit keys (both ECB and CBC Mode)
+*/
+void benchmarkAES256()
+{
+	std::cout << std::endl << std::endl << "Benchmarking AES with 256-bit keys" << std::endl << "----------------" << std::endl;
+	std::cout << "Initializing data" << std::endl;
+	std::mt19937_64 random;
+	auto buff = new char[AES_MAX_SIZE];
+	fillbuff(random, buff, AES_MAX_SIZE);
+
+	std::cout << "bytes\tECB Encrypt\tECB Decrypt\tCBC Encrypt\tCBC Decrypt" << std::endl;
+	for(auto i = AES_MIN_SIZE; i <= AES_MAX_SIZE; i += AES_STEP_SIZE)
+	{
+		char keybuff[32]{ 0 };
+		char ivbuff[16]{ 0 };
+
+		fillbuff(random, keybuff, 32);
+		fillbuff(random, ivbuff, 16);
+
+		auto key = libcrypto::aes::make_key_256(keybuff);
+		auto iv = libcrypto::aes::make_block(ivbuff, 0);
 
 		auto ecb_enc_start = std::chrono::high_resolution_clock::now();
 		libcrypto::aes::Encrypt(buff, i, key);
@@ -178,6 +267,14 @@ int main(int argc, char* argv[])
 		else if(arg == "aes128")
 		{
 			benchmarkAES128();
+		}
+		else if(arg == "aes192")
+		{
+			benchmarkAES192();
+		}
+		else if(arg == "aes256")
+		{
+			benchmarkAES256();
 		}
 	}
 
