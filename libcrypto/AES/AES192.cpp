@@ -51,13 +51,16 @@ namespace libcrypto
 			ctx->Action = action;
 			ctx->BlockCount = len / AES_BLOCK_SIZE;
 
-			ctx->RoundKeys = BuildSchedule(action, key);
+			ctx->RoundKeys = BuildSchedule(key);
+			result = SUCCESS;
 			return ctx;
 		}
 
 		inline void transform_block_192(aes_block_t& block, Context* ctx)
 		{
-			for(auto i = 0; i < AES_ROUNDS_192 - 1; i++)
+			block ^= ctx->RoundKeys[0];
+
+			for(auto i = 1; i < AES_ROUNDS_192; i++)
 			{
 				SubBytes(block);
 				ShiftRows(block);
@@ -67,22 +70,24 @@ namespace libcrypto
 
 			SubBytes(block);
 			ShiftRows(block);
-			block ^= ctx->RoundKeys[AES_ROUNDS_192 - 1];
+			block ^= ctx->RoundKeys[AES_ROUNDS_192];
 		}
 
 		inline void inverse_transform_block_192(aes_block_t& block, Context* ctx)
 		{
-			InvSubBytes(block);
+			block ^= ctx->RoundKeys[AES_ROUNDS_192];
 			InvShiftRows(block);
-			block ^= ctx->RoundKeys[0];
+			InvSubBytes(block);
 
-			for(auto i = 1; i < AES_ROUNDS_192; i++)
+			for(auto i = AES_ROUNDS_192 - 1; i > 0; i--)
 			{
-				InvSubBytes(block);
-				InvShiftRows(block);
-				InvMixColumns(block);
 				block ^= ctx->RoundKeys[i];
+				InvMixColumns(block);
+				InvShiftRows(block);
+				InvSubBytes(block);
 			}
+
+			block ^= ctx->RoundKeys[0];
 		}
 
 		LIBCRYPTO_PUB int Encrypt(char* data, size_t len, aes_key_192_t key)

@@ -53,6 +53,7 @@ namespace libcrypto
 			ctx->BlockCount = len / AES_BLOCK_SIZE;
 
 			ctx->RoundKeys = BuildSchedule(key);
+			result = SUCCESS;
 			return ctx;
 		}
 
@@ -75,11 +76,11 @@ namespace libcrypto
 
 		inline void inverse_transform_block_128(aes_block_t& block, Context* ctx)
 		{
-			block ^= ctx->RoundKeys[10];
+			block ^= ctx->RoundKeys[AES_ROUNDS_128];
 			InvShiftRows(block);
 			InvSubBytes(block);
 
-			for(auto i = 9; i > 0; i--)
+			for(auto i = AES_ROUNDS_128 - 1; i > 0; i--)
 			{
 				block ^= ctx->RoundKeys[i];
 				InvMixColumns(block);

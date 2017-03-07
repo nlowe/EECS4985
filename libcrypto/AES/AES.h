@@ -63,6 +63,30 @@ namespace libcrypto
 			return block;
 		}
 
+		inline aes_key_192_t make_key_192(char* buff)
+		{
+			aes_key_192_t k;
+
+			k[0][0] = buff[0]; k[0][1] = buff[4]; k[0][2] = buff[8];  k[0][3] = buff[12]; k[0][4] = buff[16]; k[0][5] = buff[20];
+			k[1][0] = buff[1]; k[1][1] = buff[5]; k[1][2] = buff[9];  k[1][3] = buff[13]; k[1][4] = buff[17]; k[1][5] = buff[21];
+			k[2][0] = buff[2]; k[2][1] = buff[6]; k[2][2] = buff[10]; k[2][3] = buff[14]; k[2][4] = buff[18]; k[2][5] = buff[22];
+			k[3][0] = buff[3]; k[3][1] = buff[7]; k[3][2] = buff[11]; k[3][3] = buff[15]; k[3][4] = buff[19]; k[3][5] = buff[23];
+
+			return k;
+		}
+
+		inline aes_key_256_t make_key_256(char* buff)
+		{
+			aes_key_256_t k;
+
+			k[0][0] = buff[0]; k[0][1] = buff[4]; k[0][2] = buff[8];  k[0][3] = buff[12]; k[0][4] = buff[16]; k[0][5] = buff[20]; k[0][6] = buff[24]; k[0][7] = buff[28];
+			k[1][0] = buff[1]; k[1][1] = buff[5]; k[1][2] = buff[9];  k[1][3] = buff[13]; k[1][4] = buff[17]; k[1][5] = buff[21]; k[1][6] = buff[25]; k[1][7] = buff[29];
+			k[2][0] = buff[2]; k[2][1] = buff[6]; k[2][2] = buff[10]; k[2][3] = buff[14]; k[2][4] = buff[18]; k[2][5] = buff[22]; k[2][6] = buff[26]; k[2][7] = buff[30];
+			k[3][0] = buff[3]; k[3][1] = buff[7]; k[3][2] = buff[11]; k[3][3] = buff[15]; k[3][4] = buff[19]; k[3][5] = buff[23]; k[3][6] = buff[27]; k[3][7] = buff[31];
+
+			return k;
+		}
+
 		inline aes_block_t random_block()
 		{
 			aes_block_t result;

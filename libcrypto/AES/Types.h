@@ -29,10 +29,20 @@ namespace libcrypto
 	namespace aes
 	{
 		/** A 192-bit key for AES */
-		typedef struct
+		typedef struct aes_key_192_t
 		{
 			uint8_t b[4][6]{ 0 };
+
 			uint8_t* operator[](size_t idx) { return b[idx]; }
+			aes_key_192_t& operator=(aes_key_192_t& other)
+			{
+				b[0][0] = other.b[0][0]; b[0][1] = other.b[0][1]; b[0][2] = other.b[0][2]; b[0][3] = other.b[0][3]; b[0][4] = other.b[0][4]; b[0][5] = other.b[0][5];
+				b[1][0] = other.b[1][0]; b[1][1] = other.b[1][1]; b[1][2] = other.b[1][2]; b[1][3] = other.b[1][3]; b[1][4] = other.b[1][4]; b[1][5] = other.b[1][5];
+				b[2][0] = other.b[2][0]; b[2][1] = other.b[2][1]; b[2][2] = other.b[2][2]; b[2][3] = other.b[2][3]; b[2][4] = other.b[2][4]; b[2][5] = other.b[2][5];
+				b[3][0] = other.b[3][0]; b[3][1] = other.b[3][1]; b[3][2] = other.b[3][2]; b[3][3] = other.b[3][3]; b[3][4] = other.b[3][4]; b[3][5] = other.b[3][5];
+
+				return *this;
+			}
 		} aes_key_192_t;
 
 		/** A 256-bit key for AES */
