@@ -213,6 +213,7 @@
     <ClCompile Include="AES\AES128.cpp" />
     <ClCompile Include="AES\AES192.cpp" />
     <ClCompile Include="AES\AES256.cpp" />
+    <ClCompile Include="AES\KeySchedule.cpp" />
     <ClCompile Include="DES\DES.cpp" />
     <ClCompile Include="DES\WeakKeys.cpp" />
     <ClCompile Include="dllmain.cpp">
