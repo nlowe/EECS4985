@@ -9,6 +9,7 @@
 tools/
 !tools/nuget.exe
 concat.cxx
+!validation/*.rsp
 
 # Analysis
 *.tsv

@@ -3,6 +3,7 @@
 #l benchmark.cake
 #l tests/des.cake
 #l tests/aes128.cake
+#l validation/common.cake
 
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
@@ -48,7 +49,8 @@ Task("Build")
 
 Task("Test")
     .IsDependentOn("Test-DES")
-    .IsDependentOn("Test-AES128");
+    .IsDependentOn("Test-AES128")
+    .IsDependentOn("Validate");
 
 Task("Concat")
     .Does(() =>
