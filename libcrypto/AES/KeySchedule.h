@@ -43,13 +43,14 @@ namespace libcrypto
 
 		inline aes_key_schedule_t BuildSchedule(aes_key_128_t key)
 		{
+			aes_key_schedule_t result;
 			uint8_t w[(AES_ROUNDS_128 + 1) * 4][4]{ 0 };
 
 			// The first 4 words come from the key
-			w[0][0] = key[0][0]; w[0][1] = key[1][0]; w[0][2] = key[2][0]; w[0][3] = key[3][0];
-			w[1][0] = key[0][1]; w[1][1] = key[1][1]; w[1][2] = key[2][1]; w[1][3] = key[3][1];
-			w[2][0] = key[0][2]; w[2][1] = key[1][2]; w[2][2] = key[2][2]; w[2][3] = key[3][2];
-			w[3][0] = key[0][3]; w[3][1] = key[1][3]; w[3][2] = key[2][3]; w[3][3] = key[3][3];
+			result[0][0][0] = w[0][0] = key[0][0]; result[0][1][0] = w[0][1] = key[1][0]; result[0][2][0] = w[0][2] = key[2][0]; result[0][3][0] = w[0][3] = key[3][0];
+			result[0][0][1] = w[1][0] = key[0][1]; result[0][1][1] = w[1][1] = key[1][1]; result[0][2][1] = w[1][2] = key[2][1]; result[0][3][1] = w[1][3] = key[3][1];
+			result[0][0][2] = w[2][0] = key[0][2]; result[0][1][2] = w[2][1] = key[1][2]; result[0][2][2] = w[2][2] = key[2][2]; result[0][3][2] = w[2][3] = key[3][2];
+			result[0][0][3] = w[3][0] = key[0][3]; result[0][1][3] = w[3][1] = key[1][3]; result[0][2][3] = w[3][2] = key[2][3]; result[0][3][3] = w[3][3] = key[3][3];
 
 			auto r = 0;
 			for(auto i = AES_WORDS_128; i < (AES_ROUNDS_128 + 1) * 4; i++)
@@ -72,11 +73,7 @@ namespace libcrypto
 					w[i][2] = w[i - 1][2] ^ w[i - AES_WORDS_128][2];
 					w[i][3] = w[i - 1][3] ^ w[i - AES_WORDS_128][3];
 				}
-			}
 
-			aes_key_schedule_t result;
-			for(auto i = 0; i < (AES_ROUNDS_128 + 1) * 4; i++)
-			{
 				result[i / 4][0][i % 4] = w[i][0];
 				result[i / 4][1][i % 4] = w[i][1];
 				result[i / 4][2][i % 4] = w[i][2];
@@ -88,15 +85,16 @@ namespace libcrypto
 
 		inline aes_key_schedule_t BuildSchedule(aes_key_192_t key)
 		{
+			aes_key_schedule_t result;
 			uint8_t w[(AES_ROUNDS_192 + 1) * 4][4]{ 0 };
 
 			// The first 6 words come from the key
-			w[0][0] = key[0][0]; w[0][1] = key[1][0]; w[0][2] = key[2][0]; w[0][3] = key[3][0];
-			w[1][0] = key[0][1]; w[1][1] = key[1][1]; w[1][2] = key[2][1]; w[1][3] = key[3][1];
-			w[2][0] = key[0][2]; w[2][1] = key[1][2]; w[2][2] = key[2][2]; w[2][3] = key[3][2];
-			w[3][0] = key[0][3]; w[3][1] = key[1][3]; w[3][2] = key[2][3]; w[3][3] = key[3][3];
-			w[4][0] = key[0][4]; w[4][1] = key[1][4]; w[4][2] = key[2][4]; w[4][3] = key[3][4];
-			w[5][0] = key[0][5]; w[5][1] = key[1][5]; w[5][2] = key[2][5]; w[5][3] = key[3][5];
+			result[0][0][0] = w[0][0] = key[0][0]; result[0][1][0] = w[0][1] = key[1][0]; result[0][2][0] = w[0][2] = key[2][0]; result[0][3][0] = w[0][3] = key[3][0];
+			result[0][0][1] = w[1][0] = key[0][1]; result[0][1][1] = w[1][1] = key[1][1]; result[0][2][1] = w[1][2] = key[2][1]; result[0][3][1] = w[1][3] = key[3][1];
+			result[0][0][2] = w[2][0] = key[0][2]; result[0][1][2] = w[2][1] = key[1][2]; result[0][2][2] = w[2][2] = key[2][2]; result[0][3][2] = w[2][3] = key[3][2];
+			result[0][0][3] = w[3][0] = key[0][3]; result[0][1][3] = w[3][1] = key[1][3]; result[0][2][3] = w[3][2] = key[2][3]; result[0][3][3] = w[3][3] = key[3][3];
+			result[1][0][0] = w[4][0] = key[0][4]; result[1][1][0] = w[4][1] = key[1][4]; result[1][2][0] = w[4][2] = key[2][4]; result[1][3][0] = w[4][3] = key[3][4];
+			result[1][0][1] = w[5][0] = key[0][5]; result[1][1][1] = w[5][1] = key[1][5]; result[1][2][1] = w[5][2] = key[2][5]; result[1][3][1] = w[5][3] = key[3][5];
 
 			auto r = 0;
 			for(auto i = AES_WORDS_192; i < (AES_ROUNDS_192 + 1) * 4; i++)
@@ -119,11 +117,7 @@ namespace libcrypto
 					w[i][2] = w[i - 1][2] ^ w[i - AES_WORDS_192][2];
 					w[i][3] = w[i - 1][3] ^ w[i - AES_WORDS_192][3];
 				}
-			}
 
-			aes_key_schedule_t result;
-			for(auto i = 0; i < (AES_ROUNDS_192 + 1) * 4; i++)
-			{
 				result[i / 4][0][i % 4] = w[i][0];
 				result[i / 4][1][i % 4] = w[i][1];
 				result[i / 4][2][i % 4] = w[i][2];
@@ -135,17 +129,18 @@ namespace libcrypto
 
 		inline aes_key_schedule_t BuildSchedule(aes_key_256_t key)
 		{
+			aes_key_schedule_t result;
 			uint8_t w[(AES_ROUNDS_256 + 1) * 4][4]{ 0 };
 
-			// The first 6 words come from the key
-			w[0][0] = key[0][0]; w[0][1] = key[1][0]; w[0][2] = key[2][0]; w[0][3] = key[3][0];
-			w[1][0] = key[0][1]; w[1][1] = key[1][1]; w[1][2] = key[2][1]; w[1][3] = key[3][1];
-			w[2][0] = key[0][2]; w[2][1] = key[1][2]; w[2][2] = key[2][2]; w[2][3] = key[3][2];
-			w[3][0] = key[0][3]; w[3][1] = key[1][3]; w[3][2] = key[2][3]; w[3][3] = key[3][3];
-			w[4][0] = key[0][4]; w[4][1] = key[1][4]; w[4][2] = key[2][4]; w[4][3] = key[3][4];
-			w[5][0] = key[0][5]; w[5][1] = key[1][5]; w[5][2] = key[2][5]; w[5][3] = key[3][5];
-			w[6][0] = key[0][6]; w[6][1] = key[1][6]; w[6][2] = key[2][6]; w[6][3] = key[3][6];
-			w[7][0] = key[0][7]; w[7][1] = key[1][7]; w[7][2] = key[2][7]; w[7][3] = key[3][7];
+			// The first 8 words come from the key
+			result[0][0][0] = w[0][0] = key[0][0]; result[0][1][0] = w[0][1] = key[1][0]; result[0][2][0] = w[0][2] = key[2][0]; result[0][3][0] = w[0][3] = key[3][0];
+			result[0][0][1] = w[1][0] = key[0][1]; result[0][1][1] = w[1][1] = key[1][1]; result[0][2][1] = w[1][2] = key[2][1]; result[0][3][1] = w[1][3] = key[3][1];
+			result[0][0][2] = w[2][0] = key[0][2]; result[0][1][2] = w[2][1] = key[1][2]; result[0][2][2] = w[2][2] = key[2][2]; result[0][3][2] = w[2][3] = key[3][2];
+			result[0][0][3] = w[3][0] = key[0][3]; result[0][1][3] = w[3][1] = key[1][3]; result[0][2][3] = w[3][2] = key[2][3]; result[0][3][3] = w[3][3] = key[3][3];
+			result[1][0][0] = w[4][0] = key[0][4]; result[1][1][0] = w[4][1] = key[1][4]; result[1][2][0] = w[4][2] = key[2][4]; result[1][3][0] = w[4][3] = key[3][4];
+			result[1][0][1] = w[5][0] = key[0][5]; result[1][1][1] = w[5][1] = key[1][5]; result[1][2][1] = w[5][2] = key[2][5]; result[1][3][1] = w[5][3] = key[3][5];
+			result[1][0][2] = w[6][0] = key[0][6]; result[1][1][2] = w[6][1] = key[1][6]; result[1][2][2] = w[6][2] = key[2][6]; result[1][3][2] = w[6][3] = key[3][6];
+			result[1][0][3] = w[7][0] = key[0][7]; result[1][1][3] = w[7][1] = key[1][7]; result[1][2][3] = w[7][2] = key[2][7]; result[1][3][3] = w[7][3] = key[3][7];
 
 			auto r = 0;
 			for(auto i = AES_WORDS_256; i < (AES_ROUNDS_256 + 1) * 4; i++)
@@ -176,11 +171,7 @@ namespace libcrypto
 					w[i][2] = w[i - 1][2] ^ w[i - AES_WORDS_256][2];
 					w[i][3] = w[i - 1][3] ^ w[i - AES_WORDS_256][3];
 				}
-			}
 
-			aes_key_schedule_t result;
-			for(auto i = 0; i < (AES_ROUNDS_256 + 1) * 4; i++)
-			{
 				result[i / 4][0][i % 4] = w[i][0];
 				result[i / 4][1][i % 4] = w[i][1];
 				result[i / 4][2][i % 4] = w[i][2];
