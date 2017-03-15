@@ -4,6 +4,7 @@
 # Analysis
 *.tsv
 *.csv
+*.cxx*
 
 # Build Files
 tools/
