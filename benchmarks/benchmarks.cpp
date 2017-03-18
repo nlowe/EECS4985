@@ -39,8 +39,11 @@
 /** The step in bytes for each benchmark for DES */
 #define DES_STEP_SIZE (DES_MAX_SIZE - DES_MIN_SIZE)/31 // 31 data points
 
+/** The minimum size in bytes to benchmark for AES */
 #define AES_MIN_SIZE 128
+/** The maximum size in bytes to benchmark for AES */
 #define AES_MAX_SIZE 128 * 1024 * 1024
+/** The step in bytes for each benchmark for AES */
 #define AES_STEP_SIZE (AES_MAX_SIZE - AES_MIN_SIZE)/31 // 15 data points
 
 

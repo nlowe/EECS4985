@@ -22,27 +22,24 @@
  * AES.h - API for the AES algorithm
  */
 #pragma once
+#include <iomanip>
 #include "../export.h"
 #include "Types.h"
-#include <iomanip>
 
+/** The number of bytes in one aes block */
 #define AES_BLOCK_SIZE 16
+/** The number of rounds to perform for a 128-bit key */
 #define AES_ROUNDS_128 10
+/** The number of rounds to perform for a 192-bit key */
 #define AES_ROUNDS_192 12
+/** The number of rounds to perform for a 256-bit key */
 #define AES_ROUNDS_256 14
 
 namespace libcrypto
 {
 	namespace aes
 	{
-		inline void print_block(aes_block_t& block)
-		{
-			printf("%02x %02x %02x %02x\n", block[0][0], block[0][1], block[0][2], block[0][3]);
-			printf("%02x %02x %02x %02x\n", block[1][0], block[1][1], block[1][2], block[1][3]);
-			printf("%02x %02x %02x %02x\n", block[2][0], block[2][1], block[2][2], block[2][3]);
-			printf("%02x %02x %02x %02x\n", block[3][0], block[3][1], block[3][2], block[3][3]);
-		}
-
+		/** Stuff the block into the buffer at the specified offset in column-major order */
 		inline void buffstuff(char* buff, size_t off, aes_block_t& block)
 		{
 			buff[off + 0] = block[0][0]; buff[off + 4] = block[0][1]; buff[off +  8] = block[0][2]; buff[off + 12] = block[0][3];
@@ -51,6 +48,7 @@ namespace libcrypto
 			buff[off + 3] = block[3][0]; buff[off + 7] = block[3][1]; buff[off + 11] = block[3][2]; buff[off + 15] = block[3][3];
 		}
 
+		/** Create the a block from the buffer at the specified offset */
 		inline aes_block_t make_block(char* buff, size_t offset)
 		{
 			aes_block_t block;
@@ -63,6 +61,7 @@ namespace libcrypto
 			return block;
 		}
 
+		/** Create a 192-bit key from the buffer */
 		inline aes_key_192_t make_key_192(char* buff)
 		{
 			aes_key_192_t k;
@@ -75,6 +74,7 @@ namespace libcrypto
 			return k;
 		}
 
+		/** Create a 256-bit key from the buffer */
 		inline aes_key_256_t make_key_256(char* buff)
 		{
 			aes_key_256_t k;
@@ -87,6 +87,7 @@ namespace libcrypto
 			return k;
 		}
 
+		/** Create a random block */
 		inline aes_block_t random_block()
 		{
 			aes_block_t result;

@@ -57,12 +57,14 @@ namespace libcrypto
 				}
 				else
 				{
+					// Otherwise this word is the previous word xor with the same word index in the previous round
 					w[i][0] = w[i - 1][0] ^ w[i - AES_WORDS_128][0];
 					w[i][1] = w[i - 1][1] ^ w[i - AES_WORDS_128][1];
 					w[i][2] = w[i - 1][2] ^ w[i - AES_WORDS_128][2];
 					w[i][3] = w[i - 1][3] ^ w[i - AES_WORDS_128][3];
 				}
 
+				// Populate this word in the key schedule
 				result[i / 4][0][i % 4] = w[i][0];
 				result[i / 4][1][i % 4] = w[i][1];
 				result[i / 4][2][i % 4] = w[i][2];
@@ -101,12 +103,14 @@ namespace libcrypto
 				}
 				else
 				{
+					// Otherwise this word is the previous word xor with the same word index in the previous round
 					w[i][0] = w[i - 1][0] ^ w[i - AES_WORDS_192][0];
 					w[i][1] = w[i - 1][1] ^ w[i - AES_WORDS_192][1];
 					w[i][2] = w[i - 1][2] ^ w[i - AES_WORDS_192][2];
 					w[i][3] = w[i - 1][3] ^ w[i - AES_WORDS_192][3];
 				}
 
+				// Populate this word in the key schedule
 				result[i / 4][0][i % 4] = w[i][0];
 				result[i / 4][1][i % 4] = w[i][1];
 				result[i / 4][2][i % 4] = w[i][2];
@@ -155,12 +159,14 @@ namespace libcrypto
 				}
 				else
 				{
+					// Otherwise this word is the previous word xor with the same word index in the previous round
 					w[i][0] = w[i - 1][0] ^ w[i - AES_WORDS_256][0];
 					w[i][1] = w[i - 1][1] ^ w[i - AES_WORDS_256][1];
 					w[i][2] = w[i - 1][2] ^ w[i - AES_WORDS_256][2];
 					w[i][3] = w[i - 1][3] ^ w[i - AES_WORDS_256][3];
 				}
 
+				// Populate this word in the key schedule
 				result[i / 4][0][i % 4] = w[i][0];
 				result[i / 4][1][i % 4] = w[i][1];
 				result[i / 4][2][i % 4] = w[i][2];

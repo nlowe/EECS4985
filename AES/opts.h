@@ -28,8 +28,10 @@
 #include <iostream>
 #include <regex>
 #include "../libcrypto/libcrypto.h"
+#include "../libcrypto/AES/AES.h"
 #include "../libcrypto/AES/Types.h"
 
+/** A regular expression that accepts 32, 48, or 64 hex characters (16, 24, or 32 hex bytes) */
 #define REGEX_HEX "^([0-9a-fA-F]{32}|[0-9a-fA-F]{48}|[0-9a-fA-F]{64})$"
 
 /**
@@ -47,43 +49,55 @@ private:
 			if(key.length() == 32)
 			{
 				// 128-bit hex string
+				auto j = 0;
+				for(auto i = 0; i < 32; i+=2)
+				{
+					char tmp[]{ raw[i], raw[i + 1] };
+					k128[j % 4][j++ / 4] = strtoul(tmp, nullptr, 16) & 0xff;
+				}
 			}
 			else if(key.length() == 48)
 			{
 				// 192-bit hex string
+				auto j = 0;
+				for(auto i = 0; i < 48; i+=2)
+				{
+					char tmp[]{ raw[i], raw[i + 1] };
+					k192[j % 4][j++ / 4] = strtoul(tmp, nullptr, 16) & 0xff;
+				}
 			}
 			else
 			{
 				// 256-bit hex string
+				auto j = 0;
+				for(auto i = 0; i < 64; i+=2)
+				{
+					char tmp[]{ raw[i], raw[i + 1] };
+					k256[j % 4][j++ / 4] = strtoul(tmp, nullptr, 16) & 0xff;
+				}
 			}
 		}
 		else if (key.length() == 16)
 		{
 			// 16 ascii characters
-			k128[0][0] = raw[0]; k128[0][1] = raw[4]; k128[0][2] = raw[8];  k128[0][3] = raw[12];
-			k128[1][0] = raw[1]; k128[1][1] = raw[5]; k128[1][2] = raw[9];  k128[1][3] = raw[13];
-			k128[2][0] = raw[2]; k128[2][1] = raw[6]; k128[2][2] = raw[10]; k128[2][3] = raw[14];
-			k128[3][0] = raw[3]; k128[3][1] = raw[7]; k128[3][2] = raw[11]; k128[3][3] = raw[15];
+			auto k = libcrypto::aes::make_block(const_cast<char*>(raw), 0);
+			k128 = k;
 
 			has128BitKey = true;
 		}
 		else if (key.length() == 24)
 		{
 			// 24 ascii characters
-			k192[0][0] = raw[0]; k192[0][1] = raw[4]; k192[0][2] = raw[8];  k192[0][3] = raw[12]; k192[0][4] = raw[16]; k192[0][5] = raw[20];
-			k192[1][0] = raw[1]; k192[1][1] = raw[5]; k192[1][2] = raw[9];  k192[1][3] = raw[13]; k192[1][4] = raw[17]; k192[1][5] = raw[21];
-			k192[2][0] = raw[2]; k192[2][1] = raw[6]; k192[2][2] = raw[10]; k192[2][3] = raw[14]; k192[2][4] = raw[18]; k192[2][5] = raw[22];
-			k192[3][0] = raw[3]; k192[3][1] = raw[7]; k192[3][2] = raw[11]; k192[3][3] = raw[15]; k192[3][4] = raw[19]; k192[3][5] = raw[23];
+			auto k = libcrypto::aes::make_key_192(const_cast<char*>(raw));
+			k192 = k;
 
 			has192BitKey = true;
 		}
 		else if(key.length() == 32)
 		{
 			// 32 ascii characters
-			k256[0][0] = raw[0]; k256[0][1] = raw[4]; k256[0][2] = raw[8];  k256[0][3] = raw[12]; k256[0][4] = raw[16]; k256[0][5] = raw[20]; k256[0][6] = raw[24]; k256[0][7] = raw[28];
-			k256[1][0] = raw[1]; k256[1][1] = raw[5]; k256[1][2] = raw[9];  k256[1][3] = raw[13]; k256[1][4] = raw[17]; k256[1][5] = raw[21]; k256[1][6] = raw[25]; k256[1][7] = raw[29];
-			k256[2][0] = raw[2]; k256[2][1] = raw[6]; k256[2][2] = raw[10]; k256[2][3] = raw[14]; k256[2][4] = raw[18]; k256[2][5] = raw[22]; k256[2][6] = raw[26]; k256[2][7] = raw[30];
-			k256[3][0] = raw[3]; k256[3][1] = raw[7]; k256[3][2] = raw[11]; k256[3][3] = raw[15]; k256[3][4] = raw[19]; k256[3][5] = raw[23]; k256[3][6] = raw[27]; k256[3][7] = raw[31];
+			auto k = libcrypto::aes::make_key_256(const_cast<char*>(raw));
+			k256 = k;
 		}
 		// The remainder of these are ASCII w/ space, because you totally need an extra set of quotes...
 		// Fun Fact: cmd.exe does not recognize arguments surrounded with single quotes as
@@ -93,28 +107,22 @@ private:
 		// Note: they got it right with powershell, but we still have to support cmd.exe
 		else if (key.length() == 18)
 		{
-			k128[0][0] = raw[1]; k128[0][1] = raw[5]; k128[0][2] = raw[9];  k128[0][3] = raw[13];
-			k128[1][0] = raw[2]; k128[1][1] = raw[6]; k128[1][2] = raw[10]; k128[1][3] = raw[14];
-			k128[2][0] = raw[3]; k128[2][1] = raw[7]; k128[2][2] = raw[11]; k128[2][3] = raw[15];
-			k128[3][0] = raw[4]; k128[3][1] = raw[8]; k128[3][2] = raw[12]; k128[3][3] = raw[16];
+			auto k = libcrypto::aes::make_block(const_cast<char*>(raw), 1);
+			k128 = k;
 
 			has128BitKey = true;
 		}
 		else if (key.length() == 26)
 		{
-			k192[0][0] = raw[1]; k192[0][1] = raw[5]; k192[0][2] = raw[9];  k192[0][3] = raw[13]; k192[0][4] = raw[17]; k192[0][5] = raw[21];
-			k192[1][0] = raw[2]; k192[1][1] = raw[6]; k192[1][2] = raw[10]; k192[1][3] = raw[14]; k192[1][4] = raw[18]; k192[1][5] = raw[22];
-			k192[2][0] = raw[3]; k192[2][1] = raw[7]; k192[2][2] = raw[11]; k192[2][3] = raw[15]; k192[2][4] = raw[19]; k192[2][5] = raw[23];
-			k192[3][0] = raw[4]; k192[3][1] = raw[8]; k192[3][2] = raw[12]; k192[3][3] = raw[16]; k192[3][4] = raw[20]; k192[3][5] = raw[24];
+			auto k = libcrypto::aes::make_key_192(const_cast<char*>(raw + 1));
+			k192 = k;
 
 			has192BitKey = true;
 		}
 		else if(key.length() == 34)
 		{
-			k256[0][0] = raw[1]; k256[0][1] = raw[5]; k256[0][2] = raw[9];  k256[0][3] = raw[13]; k256[0][4] = raw[17]; k256[0][5] = raw[21]; k256[0][6] = raw[25]; k256[0][7] = raw[29];
-			k256[1][0] = raw[2]; k256[1][1] = raw[6]; k256[1][2] = raw[10]; k256[1][3] = raw[14]; k256[1][4] = raw[18]; k256[1][5] = raw[22]; k256[1][6] = raw[26]; k256[1][7] = raw[30];
-			k256[2][0] = raw[3]; k256[2][1] = raw[7]; k256[2][2] = raw[11]; k256[2][3] = raw[15]; k256[2][4] = raw[19]; k256[2][5] = raw[23]; k256[2][6] = raw[27]; k256[2][7] = raw[31];
-			k256[3][0] = raw[4]; k256[3][1] = raw[8]; k256[3][2] = raw[12]; k256[3][3] = raw[16]; k256[3][4] = raw[20]; k256[3][5] = raw[24]; k256[3][6] = raw[28]; k256[3][7] = raw[32];
+			auto k = libcrypto::aes::make_key_256(const_cast<char*>(raw + 1));
+			k256 = k;
 		}
 		else
 		{
@@ -139,7 +147,9 @@ public:
 	/** The path to the output file */
 	std::string Output;
 
+	/** True iff a 128-bit key was provided */
 	bool has128BitKey = false;
+	/** True iff a 192-bit key was provided */
 	bool has192BitKey = false;
 
 	/** Whether or not errors were encountered */

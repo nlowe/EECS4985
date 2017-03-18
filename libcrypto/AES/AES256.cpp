@@ -30,6 +30,7 @@ namespace libcrypto
 {
 	namespace aes
 	{
+		/** The internal context used for encryption and decryption */
 		typedef struct
 		{
 			Action Action;
@@ -37,7 +38,7 @@ namespace libcrypto
 			size_t BlockCount;
 		} Context;
 
-		// Create an AES context for 256-bit keys
+		/** Create an AES context for 256-bit keys */
 		Context* init(Action action, size_t len, aes_key_256_t key, int& result)
 		{
 			if(len % AES_BLOCK_SIZE != 0)
@@ -56,6 +57,7 @@ namespace libcrypto
 			return ctx;
 		}
 
+		/** Transform (encrypt) the block */
 		inline void transform_block_256(aes_block_t& block, Context* ctx)
 		{
 			block ^= ctx->RoundKeys[0];
@@ -73,6 +75,7 @@ namespace libcrypto
 			block ^= ctx->RoundKeys[AES_ROUNDS_256];
 		}
 
+		/** Perform the inverse transform (decryption) on the block */
 		inline void inverse_transform_block_256(aes_block_t& block, Context* ctx)
 		{
 			block ^= ctx->RoundKeys[AES_ROUNDS_256];

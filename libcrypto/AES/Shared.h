@@ -30,6 +30,7 @@ namespace libcrypto
 {
 	namespace aes
 	{
+		/** Run all bytes in the block through a substitution box */
 		inline void SubBytes(aes_block_t& block)
 		{
 			block[0][0] = s[block[0][0]]; block[0][1] = s[block[0][1]]; block[0][2] = s[block[0][2]]; block[0][3] = s[block[0][3]];
@@ -38,6 +39,7 @@ namespace libcrypto
 			block[3][0] = s[block[3][0]]; block[3][1] = s[block[3][1]]; block[3][2] = s[block[3][2]]; block[3][3] = s[block[3][3]];
 		}
 
+		/** Run all bytes in the block through an inverse substitution box */
 		inline void InvSubBytes(aes_block_t& block)
 		{
 			block[0][0] = si[block[0][0]]; block[0][1] = si[block[0][1]]; block[0][2] = si[block[0][2]]; block[0][3] = si[block[0][3]];
@@ -46,6 +48,14 @@ namespace libcrypto
 			block[3][0] = si[block[3][0]]; block[3][1] = si[block[3][1]]; block[3][2] = si[block[3][2]]; block[3][3] = si[block[3][3]];
 		}
 
+		/**
+		 * Rotate each row in the block by a certain amount
+		 * 
+		 * Row 0: No rotation
+		 * Row 1: Rotate left one byte
+		 * Row 2: Rotate left two bytes
+		 * Row 3: Rotate left three bytes
+		 */
 		inline void ShiftRows(aes_block_t& block)
 		{
 			// Row 0 is not shifted
@@ -72,6 +82,14 @@ namespace libcrypto
 			block[3][0] = tmp;
 		}
 
+		/**
+		 * Rotate each row in the block by a certain amount
+		 * 
+		 * Row 0: No rotation
+		 * Row 1: Rotate right one byte
+		 * Row 2: Rotate right two bytes
+		 * Row 3: Rotate right three bytes
+		 */
 		inline void InvShiftRows(aes_block_t& block)
 		{
 			// Row 0 is not shifted
@@ -98,6 +116,7 @@ namespace libcrypto
 			block[3][3] = tmp;
 		}
 
+		/** Perform a matrix multiplication on the block under GF(2^8) */
 		inline void MixColumns(aes_block_t& block)
 		{
 			aes_block_t tmp;
@@ -129,6 +148,7 @@ namespace libcrypto
 			block = tmp;
 		}
 		
+		/** Perform a matrix multiplication on the block under GF(2^8) using the inverse matrix */
 		inline void InvMixColumns(aes_block_t& block)
 		{
 			aes_block_t tmp;

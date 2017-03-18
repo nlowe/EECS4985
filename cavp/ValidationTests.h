@@ -1,5 +1,6 @@
 #pragma once
 
+/** Check to see if the two buffers are equal */
 inline bool check(char* a, char* b, size_t len)
 {
     for(auto i = 0; i < len; i++)

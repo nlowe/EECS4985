@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ValidationTests.h"
-#include "../libcrypto/libcrypto.h"
 #include "../libcrypto/AES/AES.h"
 
 int aes_encrypt_ecb_128(char* key, char* data, char* expected, size_t len)

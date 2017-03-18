@@ -33,18 +33,23 @@ namespace libcrypto
 {
 	namespace aes
 	{
+		/** The round constants used in key schedule generation */
 		const uint8_t RCON[] = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36, 0x6C, 0xD8, 0xAB, 0x4D };
 
+		/** A collection of round keys used during each round in encryption and decryption */
 		typedef struct
 		{
 			aes_block_t keys[15];
 			aes_block_t& operator[](size_t idx) { return keys[idx]; }
 		} aes_key_schedule_t;
 
+		/** Generate a key schedule for the specified 128-bit key */
 		LIBCRYPTO_PUB aes_key_schedule_t BuildSchedule(aes_key_128_t key);
 
+		/** Generate a key schedule for the specified 192-bit key */
 		LIBCRYPTO_PUB aes_key_schedule_t BuildSchedule(aes_key_192_t key);
 
+		/** Generate a key schedule for the specified 256-bit key */
 		LIBCRYPTO_PUB aes_key_schedule_t BuildSchedule(aes_key_256_t key);
 	}
 }

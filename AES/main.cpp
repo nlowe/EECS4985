@@ -23,12 +23,12 @@
  */
 
 #include "stdafx.h"
-#include "../libcrypto/AES/AES.h"
+#include <chrono>
 #include <iostream>
 #include <fstream>
-#include "../libcrypto/Mask.h"
 #include "opts.h"
-#include <chrono>
+#include "../libcrypto/Mask.h"
+#include "../libcrypto/AES/AES.h"
 
 // Forward-declare so main is at the top as per project spec
 void printHelp();
