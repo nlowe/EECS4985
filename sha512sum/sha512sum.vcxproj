@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{A1C6C662-15C4-4A4E-9518-A19A0E015105}</ProjectGuid>
+    <ProjectGuid>{C4088C01-6E21-450D-BFEE-66841BD68473}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>cavp</RootNamespace>
+    <RootNamespace>sha512sum</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -142,16 +142,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="ValidationTests.h" />
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AES128Validation.cpp" />
-    <ClCompile Include="AES192Validation.cpp" />
-    <ClCompile Include="AES256Validation.cpp" />
-    <ClCompile Include="cavp.cpp" />
-    <ClCompile Include="SHA512Validation.cpp" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sha512sum.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

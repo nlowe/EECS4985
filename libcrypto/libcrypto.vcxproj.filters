@@ -57,6 +57,12 @@
     <ClInclude Include="AES\Types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Hashing\SHA512.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Hashing\constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -78,6 +84,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AES\KeySchedule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hashing\SHA512.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

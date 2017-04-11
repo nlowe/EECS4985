@@ -39,9 +39,33 @@ void fromHex(char* src, char*& dst)
 
 int main(int argc, char* argv[])
 {
+	auto result = 0;
+
+	if(argc == 4)
+	{
+		auto message = new char[strlen(argv[2]) / 2]{ 0 };
+		auto digest = new char[64];
+
+		fromHex(argv[2], message);
+		fromHex(argv[3], digest);
+
+		if(strcmp(argv[1], "sha512") == 0)
+		{
+			result = sha512_digest(message, digest, strlen(argv[2]) / 2);
+		}
+		else
+		{
+			printf("Unknown hash algorithm\n");
+			result = -1;
+		}
+
+		delete[] message;
+		return result;
+	}
+
 	if(argc < 6 || argc > 7)
 	{
-		printf("Incorrect number of arguments (got %llu). Syntax: cavp <aes128|aes192|aes256> <e|d> <key> <data> <expected> [iv]\n", argc);
+		printf("Incorrect number of arguments (got %lu). Syntax: cavp <sha512 <message> <digest>> | <aes128|aes192|aes256 <e|d> <key> <data> <expected> [iv]>\n", argc);
 		return -1;
 	}
 
@@ -59,7 +83,6 @@ int main(int argc, char* argv[])
 		fromHex(argv[6], iv);
 	}
 
-	auto result = 0;
 	if(strcmp(argv[1], "aes128") == 0)
 	{
 		if(argv[2][0] == 'e')

@@ -1,4 +1,5 @@
 #l aes.cake
+#l sha.cake
 
 int RunTest(FilePath cavp, FilePath test, string algorithmName, bool cbc = false)
 {
@@ -71,6 +72,44 @@ int RunTest(FilePath cavp, FilePath test, string algorithmName, bool cbc = false
     return failures;
 }
 
+int RunHashTest(FilePath cavp, FilePath test, string algorithmName)
+{
+    Information("Running CAV " + test.FullPath);
+
+    int failures = 0;
+    var lines = System.IO.File.ReadAllLines(test.FullPath);
+
+    var message = "";
+    var digest = "";
+    foreach(var line in lines)
+    {
+        if(string.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
+        else if(line.StartsWith("Msg")) message = line.Split('=')[1].Trim();
+        else if(line.StartsWith("MD")) digest = line.Split('=')[1].Trim();
+
+        if(!string.IsNullOrEmpty(message) && !string.IsNullOrEmpty(digest))
+        {
+            var rc = StartProcess(cavp, new ProcessSettings().WithArguments(args => args
+                .Append(algorithmName)
+                .Append(message)
+                .Append(digest)
+            ));
+            Information(algorithmName + " " + " MD=" + digest + (rc == 0 ? "...PASS" : "...FAIL"));
+
+            if(rc != 0)                
+            {
+                Warning("CAVP Failed with RC " + rc);
+                failures++;
+            }
+
+            message = digest = "";
+        }
+    }
+
+    return failures;
+}
+
 Task("Validate")
     .IsDependentOn("Build")
-    .IsDependentOn("Validate-AES");
+    .IsDependentOn("Validate-AES")
+    .IsDependentOn("Validate-SHA");

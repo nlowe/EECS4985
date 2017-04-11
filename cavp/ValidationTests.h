@@ -28,3 +28,5 @@ int aes_decrypt_cbc_192(char* key, char* iv, char* data, char* expected, size_t 
 
 int aes_decrypt_ecb_256(char* key, char* data, char* expected, size_t len);
 int aes_decrypt_cbc_256(char* key, char* iv, char* data, char* expected, size_t len);
+
+int sha512_digest(char* message, char* expected, size_t len);

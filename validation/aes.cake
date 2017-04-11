@@ -1,4 +1,5 @@
 Task("Validate-AES128")
+    .IsDependentOn("Build")
     .Does(() => 
 {
     var failures = 0;
@@ -17,6 +18,7 @@ Task("Validate-AES128")
 });
 
 Task("Validate-AES192")
+    .IsDependentOn("Build")
     .Does(() => 
 {
     var failures = 0;
@@ -35,6 +37,7 @@ Task("Validate-AES192")
 });
 
 Task("Validate-AES256")
+    .IsDependentOn("Build")
     .Does(() => 
 {
     var failures = 0;

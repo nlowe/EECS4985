@@ -203,6 +203,8 @@
     <ClInclude Include="DES\Boxes.h" />
     <ClInclude Include="DES\DES.h" />
     <ClInclude Include="DES\Math.h" />
+    <ClInclude Include="Hashing\constants.h" />
+    <ClInclude Include="Hashing\SHA512.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="export.h" />
     <ClInclude Include="libcrypto.h" />
@@ -230,6 +232,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Hashing\SHA512.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
