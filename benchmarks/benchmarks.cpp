@@ -30,6 +30,7 @@
 #include <ctime>
 #include <chrono>
 #include "../libcrypto/AES/AES.h"
+#include "../libcrypto/Hashing/SHA512.h"
 
 
 /** The minimum size in bytes to benchmark for DES */
@@ -46,6 +47,9 @@
 /** The step in bytes for each benchmark for AES */
 #define AES_STEP_SIZE (AES_MAX_SIZE - AES_MIN_SIZE)/31 // 15 data points
 
+#define SHA512_MIN_SIZE 128
+#define SHA512_MAX_SIZE 256 * 1024 * 1024
+#define SHA512_STEP_SIZE (SHA512_MAX_SIZE - SHA512_MIN_SIZE)/63
 
 /**
  * Fill the specified buffer with random bytes
@@ -256,6 +260,30 @@ void benchmarkAES256()
 	delete[] buff;
 }
 
+void benchmarkSHA512()
+{
+	std::cout << std::endl << std::endl << "Benchmarking sha512" << std::endl << "----------------" << std::endl;
+	std::cout << "Initializing data" << std::endl;
+	std::mt19937_64 random;
+	auto buff = new char[SHA512_MAX_SIZE];
+	fillbuff(random, buff, SHA512_MAX_SIZE);
+
+	std::cout << "bytes\ttime" << std::endl;
+	for (auto i = SHA512_MIN_SIZE; i <= SHA512_MAX_SIZE; i += SHA512_STEP_SIZE)
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+		auto digest = libcrypto::hashing::SHA512::ComputeHash(buff, i);
+		auto end = std::chrono::high_resolution_clock::now();
+
+		std::chrono::duration<double, std::milli> duration = end - start;
+		std::cout << i << "\t" << duration.count() << std::endl;
+
+		delete[] digest;
+	}
+
+	delete[] buff;
+}
+
 int main(int argc, char* argv[])
 {
 	srand(time(nullptr));
@@ -278,6 +306,10 @@ int main(int argc, char* argv[])
 		else if(arg == "aes256")
 		{
 			benchmarkAES256();
+		}
+		else if(arg == "sha512")
+		{
+			benchmarkSHA512();
 		}
 	}
 
