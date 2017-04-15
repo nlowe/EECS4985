@@ -26,6 +26,8 @@
 #include <string>
 #include "../export.h"
 
+#define SHA512_BLOCK_SIZE_BYTES 128
+
 namespace libcrypto
 {
 	namespace hashing
@@ -36,6 +38,8 @@ namespace libcrypto
 			LIBCRYPTO_PUB char* ComputeHash(const char* buff, size_t len);
 			/** Compute the 8-byte SHA512 digest for the specified string */
 			LIBCRYPTO_PUB char* ComputeHash(std::string str);
+			/** Compute the partial hash using the previous state. The size of the buffer must be a multiple of 128 bytes */
+			LIBCRYPTO_PUB void ComputePartialHash(char* previous, const char* buff, size_t len, bool initialBlock, size_t* totalLength);
 		}
 	}
 }

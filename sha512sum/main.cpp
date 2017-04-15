@@ -25,10 +25,15 @@
 #include "stdafx.h"
 #include <iostream>
 #include <fstream>
+#include <chrono>
 #include "../libcrypto/Hashing/SHA512.h"
+
+/** The size of the buffer for computing hashes on large files (16k) */
+#define BUFFER_SIZE SHA512_BLOCK_SIZE_BYTES * 128
 
 void printHelp();
 void hashFile(char* path);
+void hashFileBuffered(char* path);
 void printHash(char* digest);
 
 int main(int argc, char* argv[])
@@ -54,6 +59,13 @@ int main(int argc, char* argv[])
 
 		delete[] digest;
 	}
+	else if(strcmp(argv[1], "-b") == 0)
+	{
+		for(auto i = 2; i < argc; i++)
+		{
+			hashFileBuffered(argv[i]);
+		}
+	}
 	else
 	{
 		for(auto i = 1; i < argc; i++)
@@ -78,14 +90,53 @@ void hashFile(char* path)
 	size_t len = reader.tellg();
 	reader.seekg(0, std::ios::beg);
 
+	auto start = std::chrono::high_resolution_clock::now();
+
 	auto buff = new char[len] { 0 };
 	reader.read(buff, len);
 	reader.close();
 
 	auto digest = libcrypto::hashing::SHA512::ComputeHash(buff, len);
 
+	std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - start;
+
 	printHash(digest);
-	std::cout << " - " << path << std::endl;
+	std::cout << " - " << path << " (" << duration.count() << ")" << std::endl;
+
+	delete[] digest;
+	delete[] buff;
+}
+
+void hashFileBuffered(char* path)
+{
+	std::ifstream reader;
+	reader.open(path, std::ios::binary | std::ios::in);
+	if(!reader.good())
+	{
+		std::cerr << "Unable to open file for read: " << path << std::endl;
+		return;
+	}
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	auto buff = new char[BUFFER_SIZE];
+
+	auto firstBlock = true;
+	auto digest = new char[64] { 0 };
+	size_t totalLength = 0;
+	while(!reader.eof())
+	{
+		auto len = reader.read(buff, BUFFER_SIZE).gcount();
+		totalLength += len;
+
+		libcrypto::hashing::SHA512::ComputePartialHash(digest, buff, len, firstBlock, len != BUFFER_SIZE ? &totalLength : nullptr);
+		firstBlock = false;
+	}
+
+	std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - start;
+
+	printHash(digest);
+	std::cout << " - " << path << " (" << duration.count() << ")" << std::endl;
 
 	delete[] digest;
 	delete[] buff;
@@ -101,5 +152,5 @@ void printHash(char* digest)
 
 void printHelp()
 {
-	std::cout << "syntax: sha512sum <file [file2] [file3]...> | -t <string>" << std::endl;
+	std::cout << "syntax: sha512sum <file [file2] [file3]...> | <-b file [file2] [file3]...> | -t <string>" << std::endl;
 }

@@ -22,6 +22,7 @@
  * SHA512.cpp - Implementation of SHA2 for 512-bit digests
  */
 
+#include <stdexcept>
 #include "SHA512.h"
 #include "constants.h"
 #include "../libcrypto.h"
@@ -136,25 +137,25 @@ namespace libcrypto
 				state->h += h;
 			}
 
-			MessageBlock ExtractAndPadBlock(const char* buff, size_t off, size_t len)
+			MessageBlock ExtractAndPadBlock(const char* buff, size_t off, size_t len, size_t* realLen = nullptr)
 			{
 				MessageBlock result;
 
 				// Extract as many bytes from the buffer into the block that we can
 				uint64_t i = 0;
-				for(; i < 128 && (off + i) < len; i++)
+				for(; i < SHA512_BLOCK_SIZE_BYTES && (off + i) < len; i++)
 				{
 					result[i / 8] |= (0ull | (0xff & buff[off + i])) << ((7 - i) << 3);
 				}
 				// If we ran out of bytes, insert padding
-				if (i < 128)
+				if (i < SHA512_BLOCK_SIZE_BYTES)
 				{
 					// A '1' bit after the message followed by zeroes
 					result[i / 8] |= (0ull | 0x80) << ((7 - (i % 8)) << 3);
 					if(len - off < 112)
 					{
 						// with the length we extracted at the end
-						result[15] = len << 3;
+						result[15] = (realLen != nullptr ? *realLen : len) << 3;
 					}
 				}
 
@@ -165,7 +166,7 @@ namespace libcrypto
 			{
 				// TODO Padding
 				auto state = new State();
-				auto blocks = len / 128 + (len % 128 != 0 ? 1 : 0);
+				auto blocks = len / SHA512_BLOCK_SIZE_BYTES + (len % SHA512_BLOCK_SIZE_BYTES != 0 ? 1 : 0);
 
 				if(len == 0 || (len == 1 && buff[0] == 0))
 				{
@@ -178,12 +179,12 @@ namespace libcrypto
 				{
 					for(auto i = 0; i < blocks; i++)
 					{
-						auto M = ExtractAndPadBlock(buff, i * 128, len);
+						auto M = ExtractAndPadBlock(buff, i * SHA512_BLOCK_SIZE_BYTES, len);
 						round(state, M);
 					}
 
 					// Final padding comes after
-					if(len % 128 == 0)
+					if(len % SHA512_BLOCK_SIZE_BYTES == 0)
 					{
 						// If we're exactly a multiple of 128 bytes, the first byte of the padding block needs to be set
 						MessageBlock M;
@@ -191,7 +192,7 @@ namespace libcrypto
 						M[15] = len << 3;
 						round(state, M);
 					}
-					else if(len - (blocks - 1) * 128 >= 112)
+					else if(len - (blocks - 1) * SHA512_BLOCK_SIZE_BYTES >= 112)
 					{
 						// Otherwise the padding bit was already set, just append the length
 						MessageBlock M;
@@ -220,6 +221,65 @@ namespace libcrypto
 			LIBCRYPTO_PUB char* ComputeHash(std::string str)
 			{
 				return ComputeHash(str.c_str(), str.length());
+			}
+
+			LIBCRYPTO_PUB void ComputePartialHash(char* prev, const char* buff, size_t len, bool initialBlock, size_t* totalLength)
+			{
+				if (totalLength == nullptr && len % SHA512_BLOCK_SIZE_BYTES != 0) throw std::length_error("Non-final input block must be a multiple of 128 bytes");
+
+				auto blocks = len / SHA512_BLOCK_SIZE_BYTES + (totalLength != nullptr && len % SHA512_BLOCK_SIZE_BYTES != 0 ? 1 : 0);
+
+				auto state = new State();
+				auto previousState = reinterpret_cast<uint64_t*>(prev);
+
+				if(!initialBlock)
+				{
+					state->a = _byteswap_uint64(previousState[0]);
+					state->b = _byteswap_uint64(previousState[1]);
+					state->c = _byteswap_uint64(previousState[2]);
+					state->d = _byteswap_uint64(previousState[3]);
+					state->e = _byteswap_uint64(previousState[4]);
+					state->f = _byteswap_uint64(previousState[5]);
+					state->g = _byteswap_uint64(previousState[6]);
+					state->h = _byteswap_uint64(previousState[7]);
+				}
+
+				for(auto i = 0; i < blocks; i++)
+				{
+					auto M = ExtractAndPadBlock(buff, i * SHA512_BLOCK_SIZE_BYTES, len, totalLength);
+					round(state, M);
+				}
+
+				if(totalLength != nullptr)
+				{
+					// Final padding comes after
+					if(len % SHA512_BLOCK_SIZE_BYTES == 0)
+					{
+						// If we're exactly a multiple of 128 bytes, the first byte of the padding block needs to be set
+						MessageBlock M;
+						M[0] = 1ull << 63;
+						M[15] = *totalLength << 3;
+						round(state, M);
+					}
+					else if(len - (blocks - 1) * SHA512_BLOCK_SIZE_BYTES >= 112)
+					{
+						// Otherwise the padding bit was already set, just append the length
+						MessageBlock M;
+						M[15] = *totalLength << 3;
+						round(state, M);
+					}
+				}
+
+				previousState[0] = _byteswap_uint64(state->a);
+				previousState[1] = _byteswap_uint64(state->b);
+				previousState[2] = _byteswap_uint64(state->c);
+				previousState[3] = _byteswap_uint64(state->d);
+				previousState[4] = _byteswap_uint64(state->e);
+				previousState[5] = _byteswap_uint64(state->f);
+				previousState[6] = _byteswap_uint64(state->g);
+				previousState[7] = _byteswap_uint64(state->h);
+
+				delete state;
 			}
 		}
 	}
