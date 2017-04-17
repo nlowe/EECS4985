@@ -1,156 +1,91 @@
 /*
-* Copyright (c) 2016 Nathan Lowe
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*
-* main.cpp - Calculate SHA512 hashes for strings and files
-*/
+ * Copyright (c) 2016 Nathan Lowe
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ * main.cpp - Calculate SHA512 hashes for strings and files
+ */
 
 #include "stdafx.h"
 #include <iostream>
 #include <fstream>
 #include <chrono>
 #include "../libcrypto/Hashing/SHA512.h"
+#include <iomanip>
 
 /** The size of the buffer for computing hashes on large files (16k) */
 #define BUFFER_SIZE SHA512_BLOCK_SIZE_BYTES * 128
 
-void printHelp();
-void hashFile(char* path);
-void hashFileBuffered(char* path);
-void printHash(char* digest);
+/** Print the specified digest in the format required by the project spec (8-byte chunks) */
+void printHash(char* digest)
+{
+	for(auto i = 0; i < 64; i++)
+	{
+		printf("%02x", digest[i] & 0xff);
+		if (i % 8 == 7) printf(" ");
+	}
+}
 
 int main(int argc, char* argv[])
 {
-	if(argc < 1 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1] ,"/?") == 0)
+	if(argc != 2)
 	{
-		printHelp();
+		std::cout << "syntax: sha512sum <file>" << std::endl;
 		return -1;
 	}
 
-	if(strcmp(argv[1], "-t") == 0)
-	{
-		std::string str;
-		for(auto i = 2; i < argc; i++)
-		{
-			str += std::string(argv[i]);
-		}
-
-		auto digest = libcrypto::hashing::SHA512::ComputeHash(str);
-
-		printHash(digest);
-		std::cout << " - " << std::endl;
-
-		delete[] digest;
-	}
-	else if(strcmp(argv[1], "-b") == 0)
-	{
-		for(auto i = 2; i < argc; i++)
-		{
-			hashFileBuffered(argv[i]);
-		}
-	}
-	else
-	{
-		for(auto i = 1; i < argc; i++)
-		{
-			hashFile(argv[i]);
-		}
-	}
-
-    return 0;
-}
-
-void hashFile(char* path)
-{
 	std::ifstream reader;
-	reader.open(path, std::ios::binary | std::ios::ate | std::ios::in);
+	reader.open(argv[1], std::ios::binary | std::ios::in);
 	if(!reader.good())
 	{
-		std::cerr << "Unable to open file for read: " << path << std::endl;
-		return;
-	}
-
-	size_t len = reader.tellg();
-	reader.seekg(0, std::ios::beg);
-
-	auto start = std::chrono::high_resolution_clock::now();
-
-	auto buff = new char[len] { 0 };
-	reader.read(buff, len);
-	reader.close();
-
-	auto digest = libcrypto::hashing::SHA512::ComputeHash(buff, len);
-
-	std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - start;
-
-	printHash(digest);
-	std::cout << " - " << path << " (" << duration.count() << ")" << std::endl;
-
-	delete[] digest;
-	delete[] buff;
-}
-
-void hashFileBuffered(char* path)
-{
-	std::ifstream reader;
-	reader.open(path, std::ios::binary | std::ios::in);
-	if(!reader.good())
-	{
-		std::cerr << "Unable to open file for read: " << path << std::endl;
-		return;
+		std::cerr << "Unable to open file for read: " << argv[1] << std::endl;
+		return -2;
 	}
 
 	auto start = std::chrono::high_resolution_clock::now();
 
 	auto buff = new char[BUFFER_SIZE];
 
+	// Process the file in BUFFER_SIZE chunks
 	auto firstBlock = true;
 	auto digest = new char[64] { 0 };
 	size_t totalLength = 0;
 	while(!reader.eof())
 	{
+		// Try to read BUFFER_SIZE bytes and get the actual number of bytes read
 		auto len = reader.read(buff, BUFFER_SIZE).gcount();
 		totalLength += len;
 
+		// Compute the partial has for the block
 		libcrypto::hashing::SHA512::ComputePartialHash(digest, buff, len, firstBlock, len != BUFFER_SIZE ? &totalLength : nullptr);
 		firstBlock = false;
 	}
 
 	std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - start;
 
+	// Print the hash and statistics
 	printHash(digest);
-	std::cout << " - " << path << " (" << duration.count() << ")" << std::endl;
+	std::cout << " - " << argv[1] << " (" << std::fixed << std::setprecision(3) << duration.count() << "s)" << std::endl;
 
+	// Cleanup
 	delete[] digest;
 	delete[] buff;
-}
 
-void printHash(char* digest)
-{
-	for(auto i = 0; i < 64; i++)
-	{
-		printf("%02x", digest[i] & 0xff);
-	}
-}
-
-void printHelp()
-{
-	std::cout << "syntax: sha512sum <file [file2] [file3]...> | <-b file [file2] [file3]...> | -t <string>" << std::endl;
+    return 0;
 }

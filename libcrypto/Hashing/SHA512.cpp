@@ -27,12 +27,16 @@
 #include "constants.h"
 #include "../libcrypto.h"
 
+/** The number of internal rounds performed on each block of data */
+#define SHA512_ROUNDS_PER_BLOCK 80
+
 namespace libcrypto
 {
 	namespace hashing
 	{
 		namespace SHA512
 		{
+			/** The state used across rounds of the hash */
 			typedef struct
 			{
 				uint64_t a = 0x6a09e667f3bcc908;
@@ -44,62 +48,72 @@ namespace libcrypto
 				uint64_t g = 0x1f83d9abfb41bd6b;
 				uint64_t h = 0x5be0cd19137e2179;
 
-				uint64_t W[80] = { 0 };
+				uint64_t W[SHA512_ROUNDS_PER_BLOCK] = { 0 };
 			}State;
 
+			/** A 1024-bit block that SHA512 Operates on */
 			typedef struct
 			{
 				uint64_t& operator[](size_t idx) { return M[idx]; }
 				uint64_t M[16] = { 0 };
 			}MessageBlock;
 
+			/** Choose Functipn: Bit i is selected from y if it is set in x, otherwise it is selected from z */
 			inline uint64_t ch(uint64_t x, uint64_t y, uint64_t z)
 			{
 				return (x & y) ^ (~x & z);
 			}
 
+			/** Majority Function: Bit i is set if it is set in at least two of three inputs */
 			inline uint64_t maj(uint64_t x, uint64_t y, uint64_t z)
 			{
 				return (x & y) ^ (x & z) ^ (y & z);
 			}
 
+			/** Right-rotate x by the specified amount */
 			inline uint64_t rotr(uint64_t x, uint8_t n)
 			{
 				return x >> n | x << (64 - n);
 			}
 
+			/** Big-Sigma 0 from FIPS 1SHA512_ROUNDS_PER_BLOCK-4 */
 			inline uint64_t SIGMA0(uint64_t x)
 			{
 				return rotr(x, 28) ^ rotr(x, 34) ^ rotr(x, 39);
 			}
 
+			/** Big-Sigma 0 from FIPS 1SHA512_ROUNDS_PER_BLOCK-4 */
 			inline uint64_t SIGMA1(uint64_t x)
 			{
 				return rotr(x, 14) ^ rotr(x, 18) ^ rotr(x, 41);
 			}
 
+			/** Little-Sigma 0 from FIPS 1SHA512_ROUNDS_PER_BLOCK-4 */
 			inline uint64_t sigma0(uint64_t x)
 			{
 				return rotr(x, 1) ^ rotr(x, 8) ^ (x >> 7);
 			}
 
+			/** Little-Sigma 1 from FIPS 1SHA512_ROUNDS_PER_BLOCK-4 */
 			inline uint64_t sigma1(uint64_t x)
 			{
 				return rotr(x, 19) ^ rotr(x, 61) ^ (x >> 6);
 			}
 
+			/** Generate the word schedule for the round from the specified message block */
 			inline void GenSchedule(State* state, MessageBlock M)
 			{
 				for(auto t = 0; t < 16; t++)
 				{
 					state->W[t] = M[t];
 				}
-				for(auto t = 16; t < 80; t++)
+				for(auto t = 16; t < SHA512_ROUNDS_PER_BLOCK; t++)
 				{
 					state->W[t] = sigma1(state->W[t - 2]) + state->W[t - 7] + sigma0(state->W[t - 15]) + state->W[t - 16];
 				}
 			}
 
+			/** Perform an iteration of SHA512 on the specified message block */
 			inline void round(State* state, MessageBlock M)
 			{
 				auto a = state->a;
@@ -113,7 +127,7 @@ namespace libcrypto
 
 				GenSchedule(state, M);
 
-				for(auto t = 0; t <= 79; t++)
+				for(auto t = 0; t < SHA512_ROUNDS_PER_BLOCK; t++)
 				{
 					auto t1 = h + SIGMA1(e) + ch(e, f, g) + K[t] + state->W[t];
 					auto t2 = SIGMA0(a) + maj(a, b, c);
@@ -137,6 +151,7 @@ namespace libcrypto
 				state->h += h;
 			}
 
+			/** Extract and pad up to 1024 bits from the buffer. If less than 112 bytes were extracted, the length field is appended after padding */
 			MessageBlock ExtractAndPadBlock(const char* buff, size_t off, size_t len, size_t* realLen = nullptr)
 			{
 				MessageBlock result;
@@ -164,7 +179,6 @@ namespace libcrypto
 
 			LIBCRYPTO_PUB char* ComputeHash(const char* buff, size_t len)
 			{
-				// TODO Padding
 				auto state = new State();
 				auto blocks = len / SHA512_BLOCK_SIZE_BYTES + (len % SHA512_BLOCK_SIZE_BYTES != 0 ? 1 : 0);
 
