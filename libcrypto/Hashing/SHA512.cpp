@@ -70,34 +70,28 @@ namespace libcrypto
 				return (x & y) ^ (x & z) ^ (y & z);
 			}
 
-			/** Right-rotate x by the specified amount */
-			inline uint64_t rotr(uint64_t x, uint8_t n)
-			{
-				return x >> n | x << (64 - n);
-			}
-
 			/** Big-Sigma 0 from FIPS 1SHA512_ROUNDS_PER_BLOCK-4 */
 			inline uint64_t SIGMA0(uint64_t x)
 			{
-				return rotr(x, 28) ^ rotr(x, 34) ^ rotr(x, 39);
+				return _rotr64(x, 28) ^ _rotr64(x, 34) ^ _rotr64(x, 39);
 			}
 
 			/** Big-Sigma 0 from FIPS 1SHA512_ROUNDS_PER_BLOCK-4 */
 			inline uint64_t SIGMA1(uint64_t x)
 			{
-				return rotr(x, 14) ^ rotr(x, 18) ^ rotr(x, 41);
+				return _rotr64(x, 14) ^ _rotr64(x, 18) ^ _rotr64(x, 41);
 			}
 
 			/** Little-Sigma 0 from FIPS 1SHA512_ROUNDS_PER_BLOCK-4 */
 			inline uint64_t sigma0(uint64_t x)
 			{
-				return rotr(x, 1) ^ rotr(x, 8) ^ (x >> 7);
+				return _rotr64(x, 1) ^ _rotr64(x, 8) ^ (x >> 7);
 			}
 
 			/** Little-Sigma 1 from FIPS 1SHA512_ROUNDS_PER_BLOCK-4 */
 			inline uint64_t sigma1(uint64_t x)
 			{
-				return rotr(x, 19) ^ rotr(x, 61) ^ (x >> 6);
+				return _rotr64(x, 19) ^ _rotr64(x, 61) ^ (x >> 6);
 			}
 
 			/** Generate the word schedule for the round from the specified message block */
