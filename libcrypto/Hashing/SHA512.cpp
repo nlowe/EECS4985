@@ -242,6 +242,7 @@ namespace libcrypto
 
 				if(!initialBlock)
 				{
+					// Load the state from the previous partial hash
 					state->a = _byteswap_uint64(previousState[0]);
 					state->b = _byteswap_uint64(previousState[1]);
 					state->c = _byteswap_uint64(previousState[2]);

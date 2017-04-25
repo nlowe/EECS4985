@@ -26,7 +26,10 @@
 #include <string>
 #include "../export.h"
 
+/** The number of bytes in a SHA512 Message Block */
 #define SHA512_BLOCK_SIZE_BYTES 128
+/** The number of bytes in a SHA512 Digest */
+#define SHA512_DIGEST_SIZE_BYTES 64
 
 namespace libcrypto
 {

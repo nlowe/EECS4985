@@ -26,8 +26,8 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
-#include "../libcrypto/Hashing/SHA512.h"
 #include <iomanip>
+#include "../libcrypto/Hashing/SHA512.h"
 
 /** The size of the buffer for computing hashes on large files (16k) */
 #define BUFFER_SIZE SHA512_BLOCK_SIZE_BYTES * 128
@@ -35,7 +35,7 @@
 /** Print the specified digest in the format required by the project spec (8-byte chunks) */
 void printHash(char* digest)
 {
-	for(auto i = 0; i < 64; i++)
+	for(auto i = 0; i < SHA512_DIGEST_SIZE_BYTES; i++)
 	{
 		printf("%02x", digest[i] & 0xff);
 		if (i % 8 == 7) printf(" ");
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
 	// Process the file in BUFFER_SIZE chunks
 	auto firstBlock = true;
-	auto digest = new char[64] { 0 };
+	auto digest = new char[SHA512_DIGEST_SIZE_BYTES];
 	size_t totalLength = 0;
 	while(!reader.eof())
 	{
